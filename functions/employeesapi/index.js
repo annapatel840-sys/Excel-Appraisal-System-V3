@@ -571,9 +571,9 @@ function mergeEmployeeMasterIntoAppraisal(appraisalRows, employeeMasterMap) {
       name: String(master.emp_name || row.name || ""),
       designation: String(master.designation || row.designation || row.title || ""),
       reporting_manager: String(master.repo_manager || row.reporting_manager || ""),
-      // The current Employee_Master schema has no separate comp_manager column.
-      // director is the available compensation-management hierarchy value.
-      comp_manager: String(master.director || row.comp_manager || ""),
+      // Appraisal_Sheet.comp_manager is the value users edit; Employee_Master
+      // has no comp_manager column, so director is only a fallback.
+      comp_manager: String(row.comp_manager || master.director || ""),
       appraiser_tech_ed: String(master.appraiser_tech_ed || row.appraiser_tech_ed || ""),
       department: String(master.department || row.department || ""),
       wissen_experience: Number(master.wissen_experience || row.wissen_experience || 0),
@@ -1198,23 +1198,11 @@ async function updateEmployee(req, res) {
     joining_date: "date_of_join",
   };
 
-  const appraisalFieldMap = {
-    current_annual_base_pay: "base_pay",
-    target_pb_allocated_for_may: "allocated_pb",
-    allocated_pb_amount: "allocated_pb",
-    pb_installment: "allocated_pb_installment",
-    pb_to_be_paid: "performance_bonus",
-    new_pb_to_be_offered: "performance_bonus",
-    new_pb_installment: "performance_bonus_installment",
-    new_rb: "retention_bonus",
-    hike_amount: "hike_amount",
-    hike_pct: "hike_pct",
-    target_pb_next_year: "target_performance_bonus",
-    eligible_for_promotion: "promotion",
-    new_title: "title",
-    manager_rating: "manager_rating",
-    rating: "rating",
-  };
+  // Every other editable field is an Appraisal_Sheet column of the same name.
+  const appraisalFieldMap = {};
+  ALLOWED_FIELDS.forEach(function (field) {
+    if (field !== "status" && !masterFieldMap[field]) appraisalFieldMap[field] = field;
+  });
 
   const masterUpdate = { ROWID: masterRow.ROWID };
   const appraisalUpdate = { ROWID: appraisalRow.ROWID };
