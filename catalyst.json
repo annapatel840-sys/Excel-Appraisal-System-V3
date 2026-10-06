@@ -7,7 +7,6 @@
       "employeemasterapi",
       "payrollcycleapi",
       "budgetmasterapi",
-      "delegationapi",
       "accessapi",
       "demo_seed"
     ],

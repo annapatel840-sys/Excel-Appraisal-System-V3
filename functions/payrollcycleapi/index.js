@@ -9,11 +9,11 @@ const catalyst = require("zcatalyst-sdk-node");
 const access = require("./accessCore");
 
 const TABLES = {
-  employees: "74008000000039094",
-  employeeMaster: "74008000000035727",
-  payroll: "74008000000035326",
-  cycles: "74008000000034190",
-  audit: "74008000000034940",
+  employees: "Appraisal_Sheet",
+  employeeMaster: "Employee_Master",
+  payroll: "Payroll_Data",
+  cycles: "Appraisal_Cycle_Master",
+  audit: "Appraisal_Audit",
 };
 const PAGE_SIZE = 200;
 const MAX_UPLOAD_ROWS = 5000;

@@ -8,7 +8,7 @@
 const catalyst = require("zcatalyst-sdk-node");
 const access = require("./accessCore");
 
-const PAYROLL_DATA_TABLE_ID = "74008000000035326";
+const PAYROLL_DATA_TABLE_ID = "Payroll_Data";
 
 const DATASTORE_PAGE_SIZE = 200;
 

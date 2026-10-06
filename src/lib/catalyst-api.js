@@ -2,7 +2,7 @@
 // Catalyst Development environment, so the ".development." domain is intended.
 // Override per build with VITE_CATALYST_FUNCTIONS_URL (e.g. for Production).
 const PROJECT_FUNCTIONS_URL =
-  "https://excelappraisalmanagement-60090194508.development.catalystserverless.in/server";
+  "https://performanceletterautomation-60088966704.development.catalystserverless.in/server";
 
 const FUNCTIONS_BASE_URL = import.meta.env.DEV
   ? "http://localhost:3000/server"

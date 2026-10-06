@@ -8,7 +8,7 @@
 const catalyst = require("zcatalyst-sdk-node");
 const access = require("./accessCore");
 
-const AUDIT_TABLE_ID = "74008000000034940";
+const AUDIT_TABLE_ID = "Appraisal_Audit";
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 500;

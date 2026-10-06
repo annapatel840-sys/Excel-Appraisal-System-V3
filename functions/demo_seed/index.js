@@ -4,13 +4,13 @@ const catalyst = require("zcatalyst-sdk-node");
 const accessCore = require("./accessCore");
 
 const TABLES = {
-  audit: "74008000000034940",
-  cycle: "74008000000034190",
-  budget: "74008000000034565",
-  employeeMaster: "74008000000035727",
-  appraisal: "74008000000039094",
-  payroll: "74008000000035326",
-  delegation: "74008000000036124",
+  audit: "Appraisal_Audit",
+  cycle: "Appraisal_Cycle_Master",
+  budget: "Budget_Master",
+  employeeMaster: "Employee_Master",
+  appraisal: "Appraisal_Sheet",
+  payroll: "Payroll_Data",
+  delegation: "Delegation",
 };
 
 const HR = "EMP001 - Prabhuprasad Parida";

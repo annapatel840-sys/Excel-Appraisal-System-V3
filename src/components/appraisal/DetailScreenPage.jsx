@@ -30,7 +30,7 @@ const CURRENT_CYCLE = "Apr-26";
    ------------------------------------------------------------------ */
 // Where "View budget" goes when no onViewBudget prop is passed.
 // Prefer passing onViewBudget={() => navigate("/your-route")}.
-const BUDGET_PATH = "https://excel-appraisal-syst-iqjipxdl.onslate.in/employee-master?tab=budget-allocation";
+const BUDGET_PATH = "/employee-master?tab=budget-allocation";
 // Placeholder text for the "Budget changed" banner until real budget
 // figures are wired in. Pass budgetNotice={{ from, to, changes, since }}
 // to override, or budgetNotice={null} to hide the banner message.

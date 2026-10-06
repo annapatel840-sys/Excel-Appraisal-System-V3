@@ -15,8 +15,8 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const DATASTORE_PAGE_SIZE = 200;
 
-const EMPLOYEES_TABLE_ID = "74008000000039094";
-const EMPLOYEE_MASTER_TABLE_ID = "74008000000035727";
+const EMPLOYEES_TABLE_ID = "Appraisal_Sheet";
+const EMPLOYEE_MASTER_TABLE_ID = "Employee_Master";
 
 /* ============================================================
    EXPRESS JSON BODY PARSER
