@@ -1,0 +1,157 @@
+/* Access screen (HR Operations -> Access). Ported from docs/access-design/Access_Screen_v5.html.
+   Every selector is scoped under .access-screen so the generic design class names
+   (.tab .btn .card table th ...) cannot leak into the rest of the app.
+   Note: the design's "select.lim.hidden" is renamed to "lim-hidden" because Tailwind's
+   .hidden utility (display:none) would otherwise hide the select. */
+
+.access-screen {
+  --navy: #12304F; --navy2: #1E3A5F; --band: #17365D; --teal: #14A3A3; --tealSoft: #E3F5F5;
+  --page: #EEF1F5; --line: #D7DCE3; --line2: #E1E5EB; --head: #EEF2F7; --text: #334155;
+  --muted: #64748B; --edit: #EAF7EE; --editLine: #7BC496; --amberBg: #FFF7E6; --amberLine: #FFD591;
+  --amber: #873800; --red: #B42318;
+  font-family: Manrope, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.access-screen *, .access-screen *::before, .access-screen *::after { box-sizing: border-box; }
+.access-screen button, .access-screen input, .access-screen select { font: inherit; color: inherit; }
+.access-screen h3, .access-screen h4 { font-weight: 700; }
+.access-screen ul { list-style: disc; }
+.access-screen b { font-weight: 700; }
+
+/* banners (new: dry-run / no active cycle) */
+.access-screen .banner { margin: 0 0 10px; padding: 8px 12px; border-radius: 4px; font-size: 12px; background: var(--amberBg); color: var(--amber); border: 1px solid var(--amberLine); }
+
+.access-screen .info { margin: 0; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 4px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.access-screen .info .t { font-weight: 800; margin-right: 10px; }
+.access-screen .info .d { color: var(--muted); }
+.access-screen .btn { padding: 6px 13px; border: 1px solid var(--line); border-radius: 4px; background: #fff; font-weight: 700; cursor: pointer; color: var(--text); }
+.access-screen .btn:hover { background: #f6f8fb; }
+.access-screen .btn.p { background: var(--teal); border-color: var(--teal); color: #fff; }
+.access-screen .btn.p:disabled, .access-screen .btn:disabled { opacity: .45; cursor: default; }
+.access-screen .btn.sm { padding: 3px 9px; font-size: 12px; }
+.access-screen .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; padding: 12px 0 0; }
+.access-screen .card { background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
+.access-screen .chead { background: var(--band); color: #fff; padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; }
+.access-screen .chead small { font-weight: 600; opacity: .8; }
+.access-screen .tabs { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line2); flex-wrap: wrap; }
+.access-screen .tab { padding: 5px 12px; border-radius: 5px; font-weight: 700; color: #3b4a5e; cursor: pointer; border: 1px solid transparent; background: none; }
+.access-screen .tab.on { border-color: var(--line); background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); color: var(--navy); }
+.access-screen .tab .n { background: var(--amberBg); color: var(--amber); border-radius: 8px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+.access-screen .tab .n.cnt0 { background: #EEF2F7; color: #334155; }
+.access-screen .body { flex: 1; overflow: auto; max-height: calc(100vh - 330px); min-height: 320px; }
+.access-screen .tools { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line2); flex-wrap: wrap; }
+.access-screen .tools input[type=text], .access-screen .tools input[type=date], .access-screen .tools select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.access-screen .tools .hint { color: var(--muted); font-size: 12px; }
+.access-screen table { width: 100%; border-collapse: collapse; }
+.access-screen th { background: var(--head); text-align: left; padding: 7px 10px; font-size: 11px; color: var(--navy2); position: sticky; top: 0; z-index: 1; white-space: nowrap; font-weight: 700; vertical-align: top; }
+.access-screen td { padding: 6px 10px; border-top: 1px solid var(--line2); vertical-align: middle; }
+.access-screen tr.grp td { background: #F7F9FC; font-weight: 800; font-size: 11px; color: var(--muted); letter-spacing: .4px; text-transform: uppercase; }
+.access-screen .note { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; }
+.access-screen .key { color: #94A3B8; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; }
+.access-screen .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.access-screen .seg button { border: 0; background: #fff; padding: 3px 9px; font-size: 11px; color: var(--muted); cursor: pointer; border-left: 1px solid var(--line2); }
+.access-screen .seg button:first-child { border-left: 0; }
+.access-screen .seg button:disabled { cursor: default; }
+.access-screen .seg button.on { font-weight: 800; color: var(--navy2); background: #E6F0FB; }
+.access-screen .seg button.on.edit { background: var(--teal); color: #fff; }
+.access-screen .seg button.on.none { background: #EEF1F5; color: #334155; }
+.access-screen .cell { display: inline-block; }
+.access-screen .cell.chg .seg, .access-screen .cell.chg select, .access-screen .cell.chg .yn { box-shadow: 0 0 0 2px var(--editLine); border-radius: 4px; }
+.access-screen .lock { color: #94A3B8; font-size: 12px; }
+.access-screen .yn { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.access-screen .yn button { border: 0; background: #fff; padding: 3px 10px; font-size: 11px; cursor: pointer; color: var(--muted); }
+.access-screen .yn button.on.y { background: var(--teal); color: #fff; font-weight: 800; }
+.access-screen .yn button.on.n { background: #EEF1F5; color: #334155; font-weight: 800; }
+.access-screen select.lim { padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px; background: #fff; }
+.access-screen select.lim.lim-hidden { background: #FDECEC; }
+.access-screen select.lim.lim-edit { background: var(--tealSoft); }
+.access-screen .kind { padding: 1px 7px; border-radius: 9px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.access-screen .kind.input { background: var(--tealSoft); color: #0E7C7C; }
+.access-screen .kind.master { background: #EEF2F7; color: var(--muted); }
+.access-screen .kind.upload { background: var(--amberBg); color: var(--amber); }
+.access-screen .kind.calc, .access-screen .kind.pair { background: #EEF0FF; color: #4338CA; }
+.access-screen .derived { font-size: 12px; color: var(--muted); }
+.access-screen .role { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.access-screen .role.hr { background: #FFF3E0; color: #9A3412; }
+.access-screen .role.techEd { background: var(--tealSoft); color: #0E7C7C; }
+.access-screen .role.compMgr { background: #E6F0FB; color: #1859A8; }
+.access-screen .role.readOnly { background: #EEF1F5; color: #475569; }
+.access-screen .role.custom { background: #F3E8FF; color: #6B21A8; }
+.access-screen .pend { border-top: 1px solid var(--line); padding: 9px 12px; display: flex; gap: 10px; align-items: center; background: #FBFCFD; flex-wrap: wrap; }
+.access-screen .pend .cnt { font-weight: 800; }
+.access-screen .pend .cnt.z { color: var(--muted); font-weight: 600; }
+.access-screen .pend input { flex: 1; min-width: 200px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.access-screen .msg { margin: 0 12px 8px; padding: 7px 10px; border-radius: 4px; font-size: 12px; }
+.access-screen .msg.err { background: #FDECEC; color: var(--red); border: 1px solid #F5C2C0; }
+.access-screen .msg.ok { background: var(--edit); color: #166534; border: 1px solid #BFE5CB; }
+.access-screen .card > .msg { margin-top: 8px; }
+.access-screen .empty { padding: 24px; text-align: center; color: var(--muted); }
+.access-screen .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .35); display: flex; align-items: center; justify-content: center; z-index: 60; }
+.access-screen .mbox { background: #fff; border-radius: 8px; width: min(760px, 94vw); max-height: 86vh; overflow: auto; box-shadow: 0 10px 40px rgba(0, 0, 0, .25); }
+.access-screen .mbox .chead { position: sticky; top: 0; z-index: 2; }
+.access-screen .mbox .chead .btn { color: var(--text); }
+.access-screen .mgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px; }
+.access-screen .mgrid h4 { margin: 0 0 6px; font-size: 12px; color: var(--navy2); }
+.access-screen .mgrid ul { margin: 0; padding-left: 16px; font-size: 12px; }
+.access-screen .mgrid li { margin: 2px 0; }
+.access-screen .mnote { padding: 0 14px 14px; color: var(--muted); font-size: 12px; }
+.access-screen .pill { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 800; margin-left: 4px; }
+.access-screen .pill.v { background: #E6F0FB; color: #1859A8; }
+.access-screen .pill.e { background: var(--tealSoft); color: #0E7C7C; }
+.access-screen .addrole { border: 1px dashed var(--teal); color: #0E7C7C; background: #F0FAFA; border-radius: 4px; padding: 4px 10px; font-weight: 800; font-size: 11px; white-space: nowrap; cursor: pointer; }
+.access-screen th .src { display: block; font-weight: 600; color: var(--muted); font-size: 10px; }
+.access-screen th .rtools { display: block; margin-top: 2px; }
+.access-screen th .rtools button { border: 0; background: none; color: #0E7C7C; font-size: 10px; font-weight: 700; cursor: pointer; padding: 0; margin-right: 6px; }
+.access-screen .side { display: flex; flex-direction: column; overflow: visible; }
+.access-screen .sbox { position: relative; padding: 8px 12px; border-bottom: 1px solid var(--line2); }
+.access-screen .sbox input { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.access-screen .sres { position: absolute; left: 12px; right: 12px; top: 40px; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, .12); z-index: 5; max-height: 260px; overflow: auto; }
+.access-screen .sres > div { padding: 7px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.access-screen .sres > div:hover { background: #F0FAFA; }
+.access-screen .qc { padding: 10px 12px; border-bottom: 1px solid var(--line2); background: #FBFCFD; }
+.access-screen .qc h4, .access-screen .sec h4 { margin: 0 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; display: flex; justify-content: space-between; }
+.access-screen .qc .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.access-screen .qc .hint { color: var(--muted); font-size: 12px; }
+.access-screen .qc select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px; max-width: 100%; background: #fff; }
+.access-screen .qans { margin-top: 8px; background: #fff; border: 1px solid var(--line2); border-left: 3px solid var(--teal); border-radius: 4px; padding: 8px 10px; font-size: 12px; }
+.access-screen .qans b.y { color: #0E7C7C; }
+.access-screen .qans b.n { color: var(--red); }
+.access-screen .qans ul { margin: 4px 0 0; padding-left: 16px; }
+.access-screen .qans .src { color: var(--muted); }
+.access-screen .pcard { padding: 12px 14px; border-bottom: 1px solid var(--line2); }
+.access-screen .pcard h3 { margin: 0; font-size: 15px; }
+.access-screen .pcard .meta { color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+.access-screen .kv { display: grid; grid-template-columns: 86px 1fr; gap: 4px 8px; font-size: 12px; }
+.access-screen .kv b { color: var(--muted); font-weight: 700; }
+.access-screen .ov { background: #F7F9FC; border: 1px solid var(--line2); border-radius: 5px; padding: 6px 8px; font-size: 12px; margin-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.access-screen .sec { padding: 9px 14px; border-bottom: 1px solid var(--line2); }
+.access-screen .li { font-size: 12px; padding: 3px 0; display: flex; justify-content: space-between; gap: 6px; cursor: pointer; }
+.access-screen .li:hover { color: var(--navy); }
+.access-screen .flag { padding: 1px 7px; border-radius: 9px; font-size: 10px; font-weight: 800; background: #FDECEC; color: var(--red); white-space: nowrap; }
+.access-screen .flag.a { background: var(--amberBg); color: var(--amber); }
+.access-screen .counts { padding: 8px 14px; font-size: 12px; color: var(--muted); }
+.access-screen .link { color: #0E7C7C; font-weight: 700; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.access-screen .mform { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.access-screen .mform.inner { padding: 0; }
+.access-screen .mform label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; }
+.access-screen .mform input, .access-screen .mform select { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.access-screen .mform input[type=checkbox] { width: auto; margin-right: 4px; vertical-align: middle; }
+.access-screen .mform .full { grid-column: 1 / -1; }
+.access-screen .mfoot { display: flex; justify-content: flex-end; gap: 8px; padding: 0 14px 14px; }
+.access-screen .mbody { padding: 14px; font-size: 13px; }
+.access-screen .ovsrc { font-size: 10px; font-weight: 800; color: #6B21A8; background: #F3E8FF; border-radius: 8px; padding: 0 6px; margin-left: 4px; }
+
+/* Delegation helper (new) */
+.access-screen .dlg { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line2); flex-wrap: wrap; background: #F7FBFB; }
+.access-screen .dlg .lbl { font-weight: 800; color: var(--navy2); }
+.access-screen .dlg select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px; background: #fff; }
+.access-screen .dlg .hint { color: var(--muted); font-size: 12px; }
+.access-screen .dlg .banner { margin: 0; flex-basis: 100%; }
+.access-screen .dlg .res { flex-basis: 100%; font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .access-screen .wrap { grid-template-columns: 1fr; }
+  .access-screen .body { max-height: none; }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "accessapi",
+  "version": "5.0.0",
+  "description": "Access screen API for the Compensation tool (Catalyst Advanced I/O)",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.19.2",
+    "zcatalyst-sdk-node": "^3.4.0"
+  }
+}

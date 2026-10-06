@@ -1,0 +1,11 @@
+{
+	"name": "budgetmasterapi",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "user1@demo7.race2tech.in",
+	"dependencies": {
+		"@zcatalyst/auth": "latest",
+		"@zcatalyst/cache": "latest",
+		"zcatalyst-sdk-node": "^3.4.0"
+	}
+}

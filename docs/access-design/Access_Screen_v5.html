@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access — Compensation Management</title>
+<!--
+  Access_Screen_v5.html — HR Operations → Access
+  v5: connected to accessapi v5 (Access_Catalyst_v5.zip) — screens / actions / fields come from the AccessCatalog table; Apply saves to Catalyst.
+  v4: access data is downloaded only when it has changed (version check; copy kept for the browser session).
+  v3: roles come from Catalyst (HR Admin + any role HR adds) and Delegation (Tech ED, Comp Manager);
+  no "+ Add user"; read-only = View; personal overrides; Find a person + Quick check (no AI);
+  no masking; Hike % follows Hike Amount.
+  Demo data runs when CONFIG.accessApiUrl is empty. Settings are stored by KEY, never by label.
+-->
+<style>
+
+:root{--navy:#12304F;--navy2:#1E3A5F;--band:#17365D;--teal:#14A3A3;--tealSoft:#E3F5F5;--page:#EEF1F5;--line:#D7DCE3;--line2:#E1E5EB;--head:#EEF2F7;--text:#334155;--muted:#64748B;--edit:#EAF7EE;--editLine:#7BC496;--amberBg:#FFF7E6;--amberLine:#FFD591;--amber:#873800;--red:#B42318}
+*{box-sizing:border-box}
+body{margin:0;font-family:Manrope,"Segoe UI",Roboto,Arial,sans-serif;background:var(--page);color:var(--text);font-size:13px}
+button,input,select{font:inherit}
+.top{background:linear-gradient(90deg,var(--navy),var(--navy2));color:#fff;padding:12px 20px;border-bottom:3px solid var(--teal);display:flex;justify-content:space-between;align-items:center}
+.top b{font-size:18px}.top .cyc{opacity:.75;margin-left:10px}
+.who{display:flex;gap:8px;align-items:center}.who .chip{background:#fff;color:var(--navy);border-radius:4px;padding:1px 7px;font-weight:700;font-size:11px}
+.nav{background:#fff;display:flex;gap:26px;padding:0 20px;border-bottom:1px solid var(--line)}
+.nav span{padding:11px 0;font-weight:700;color:#3b4a5e}.nav span.on{border-bottom:3px solid var(--teal);color:var(--navy)}
+.steps{display:flex;gap:8px;padding:12px 20px 0;flex-wrap:wrap}
+.step{padding:6px 14px;border:1px solid var(--line);border-radius:16px;background:#fff;font-weight:700}
+.step.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.info{margin:12px 20px 0;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:4px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.info .t{font-weight:800;margin-right:10px}.info .d{color:var(--muted)}
+.btn{padding:6px 13px;border:1px solid var(--line);border-radius:4px;background:#fff;font-weight:700;cursor:pointer;color:var(--text)}
+.btn:hover{background:#f6f8fb}.btn.p{background:var(--teal);border-color:var(--teal);color:#fff}.btn.p:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:3px 9px;font-size:12px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;padding:12px 20px 20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.chead{background:var(--band);color:#fff;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.chead small{font-weight:600;opacity:.8}
+.tabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.tab{padding:5px 12px;border-radius:5px;font-weight:700;color:#3b4a5e;cursor:pointer;border:1px solid transparent;background:none}
+.tab.on{border-color:var(--line);background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05);color:var(--navy)}
+.tab .n{background:var(--amberBg);color:var(--amber);border-radius:8px;padding:0 6px;font-size:11px;margin-left:4px}
+.body{flex:1;overflow:auto;max-height:calc(100vh - 330px);min-height:320px}
+.tools{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.tools input[type=text],.tools select{padding:5px 8px;border:1px solid var(--line);border-radius:4px}
+.tools .hint{color:var(--muted);font-size:12px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--head);text-align:left;padding:7px 10px;font-size:11px;color:var(--navy2);position:sticky;top:0;z-index:1;white-space:nowrap}
+td{padding:6px 10px;border-top:1px solid var(--line2);vertical-align:middle}
+tr.grp td{background:#F7F9FC;font-weight:800;font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.note{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.key{color:#94A3B8;font-family:Consolas,"DejaVu Sans Mono",monospace;font-size:11px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:3px 9px;font-size:11px;color:var(--muted);cursor:pointer;border-left:1px solid var(--line2)}
+.seg button:first-child{border-left:0}
+.seg button.on{font-weight:800;color:var(--navy2);background:#E6F0FB}
+.seg button.on.edit{background:var(--teal);color:#fff}
+.seg button.on.none{background:#EEF1F5;color:#334155}
+.cell.chg .seg,.cell.chg select,.cell.chg .yn{box-shadow:0 0 0 2px var(--editLine);border-radius:4px}
+.lock{color:#94A3B8;font-size:12px}
+.yn{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.yn button{border:0;background:#fff;padding:3px 10px;font-size:11px;cursor:pointer;color:var(--muted)}
+.yn button.on.y{background:var(--teal);color:#fff;font-weight:800}.yn button.on.n{background:#EEF1F5;color:#334155;font-weight:800}
+select.lim{padding:3px 6px;border:1px solid var(--line);border-radius:4px;font-size:12px;background:#fff}
+select.lim.hidden{background:#FDECEC}select.lim.edit{background:var(--tealSoft)}
+.kind{padding:1px 7px;border-radius:9px;font-size:10px;font-weight:800;white-space:nowrap}
+.kind.input{background:var(--tealSoft);color:#0E7C7C}.kind.master{background:#EEF2F7;color:var(--muted)}.kind.upload{background:var(--amberBg);color:var(--amber)}.kind.calc{background:#EEF0FF;color:#4338CA}.kind.pair{background:#EEF0FF;color:#4338CA}
+.derived{font-size:12px;color:var(--muted)}
+.role{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:800;white-space:nowrap}
+.role.hr{background:#FFF3E0;color:#9A3412}.role.techEd{background:var(--tealSoft);color:#0E7C7C}.role.compMgr{background:#E6F0FB;color:#1859A8}.role.readOnly{background:#EEF1F5;color:#475569}
+.ulist{flex:1;overflow:auto;max-height:calc(100vh - 380px)}
+.urow{padding:9px 14px;border-top:1px solid var(--line2);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.urow:hover{background:#F7F9FC}.urow.sel{background:#F0FAFA}
+.urow b{display:block}.urow small{color:var(--muted)}
+.uinact{opacity:.5}
+.side-note{padding:10px 14px;color:var(--muted);font-size:12px;border-top:1px solid var(--line2)}
+.side-btns{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line2)}
+.side-btns .btn{flex:1}
+.pend{border-top:1px solid var(--line);padding:9px 12px;display:flex;gap:10px;align-items:center;background:#FBFCFD;flex-wrap:wrap}
+.pend .cnt{font-weight:800}.pend .cnt.z{color:var(--muted);font-weight:600}
+.pend input{flex:1;min-width:200px;padding:6px 8px;border:1px solid var(--line);border-radius:4px}
+.msg{margin:0 12px 8px;padding:7px 10px;border-radius:4px;font-size:12px;display:none}
+.msg.err{display:block;background:#FDECEC;color:var(--red);border:1px solid #F5C2C0}
+.msg.ok{display:block;background:var(--edit);color:#166534;border:1px solid #BFE5CB}
+.form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line2);align-items:end}
+.form label{font-size:11px;color:var(--muted);display:block;margin-bottom:2px}
+.form input,.form select{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:4px}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:center;justify-content:center;z-index:10}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:8px;width:min(760px,94vw);max-height:86vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.mbox .chead{position:sticky;top:0}
+.mgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px}
+.mgrid h4{margin:0 0 6px;font-size:12px;color:var(--navy2)}
+.mgrid ul{margin:0;padding-left:16px;font-size:12px}.mgrid li{margin:2px 0}
+.mnote{padding:0 14px 14px;color:var(--muted);font-size:12px}
+.pill{display:inline-block;padding:0 6px;border-radius:8px;font-size:10px;font-weight:800;margin-left:4px}
+.pill.v{background:#E6F0FB;color:#1859A8}.pill.e{background:var(--tealSoft);color:#0E7C7C}
+@media (max-width:1100px){.wrap{grid-template-columns:1fr}.ulist{max-height:300px}.body{max-height:none}}
+
+.role.custom{background:#F3E8FF;color:#6B21A8}
+.addrole{border:1px dashed var(--teal);color:#0E7C7C;background:#F0FAFA;border-radius:4px;padding:4px 10px;font-weight:800;font-size:11px;white-space:nowrap;cursor:pointer}
+th .src{display:block;font-weight:600;color:var(--muted);font-size:10px}
+th .rtools{display:block;margin-top:2px}
+th .rtools button{border:0;background:none;color:#0E7C7C;font-size:10px;font-weight:700;cursor:pointer;padding:0;margin-right:6px}
+.side{display:flex;flex-direction:column}
+.sbox{position:relative;padding:8px 12px;border-bottom:1px solid var(--line2)}
+.sbox input{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px}
+.sres{position:absolute;left:12px;right:12px;top:40px;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:260px;overflow:auto}
+.sres div{padding:7px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.sres div:hover{background:#F0FAFA}
+.qc{padding:10px 12px;border-bottom:1px solid var(--line2);background:#FBFCFD}
+.qc h4,.sec h4{margin:0 0 6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between}
+.qc .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.qc select{padding:4px 6px;border:1px solid var(--line);border-radius:4px;font-size:12px;max-width:100%}
+.qans{margin-top:8px;background:#fff;border:1px solid var(--line2);border-left:3px solid var(--teal);border-radius:4px;padding:8px 10px;font-size:12px;display:none}
+.qans.on{display:block}.qans b.y{color:#0E7C7C}.qans b.n{color:var(--red)}
+.qans ul{margin:4px 0 0;padding-left:16px}.qans .src{color:var(--muted)}
+.pcard{padding:12px 14px;border-bottom:1px solid var(--line2)}
+.pcard h3{margin:0;font-size:15px}.pcard .meta{color:var(--muted);font-size:12px;margin:2px 0 8px}
+.kv{display:grid;grid-template-columns:86px 1fr;gap:4px 8px;font-size:12px}.kv b{color:var(--muted);font-weight:700}
+.ov{background:#F7F9FC;border:1px solid var(--line2);border-radius:5px;padding:6px 8px;font-size:12px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.sec{padding:9px 14px;border-bottom:1px solid var(--line2)}
+.li{font-size:12px;padding:3px 0;display:flex;justify-content:space-between;gap:6px;cursor:pointer}
+.li:hover{color:var(--navy)}
+.flag{padding:1px 7px;border-radius:9px;font-size:10px;font-weight:800;background:#FDECEC;color:var(--red);white-space:nowrap}.flag.a{background:var(--amberBg);color:var(--amber)}
+.counts{padding:8px 14px;font-size:12px;color:var(--muted)}
+.link{color:#0E7C7C;font-weight:700;cursor:pointer;text-transform:none;letter-spacing:0}
+.mform{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mform label{font-size:11px;color:var(--muted);display:block;margin-bottom:2px}
+.mform input,.mform select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px}
+.mform .full{grid-column:1/-1}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 14px}
+.ovsrc{font-size:10px;font-weight:800;color:#6B21A8;background:#F3E8FF;border-radius:8px;padding:0 6px;margin-left:4px}
+</style>
+</head>
+<body>
+<div class="top"><div><b>Compensation Management</b><span class="cyc" id="cycName">Apr-26 cycle</span></div>
+  <div class="who"><span id="whoName">Logged in as Priya Nair</span><span class="chip">HR</span></div></div>
+<div class="nav"><span>Appraisal Sheet</span><span>Detail screen</span><span>Team changes</span><span class="on">HR Operations</span><span>Dashboard</span></div>
+<div class="steps"><span class="step">Budget config</span><span class="step">Apply budget</span><span class="step">Audit trail</span><span class="step">Cycle Master</span><span class="step">Employee Master</span><span class="step">Uploads</span><span class="step on">Access</span></div>
+
+<div class="info">
+  <div><span class="t">Access</span><span class="d">Roles from Catalyst and Delegation. Set what each role can do; override for one person.</span></div>
+  <div style="display:flex;gap:10px;align-items:center"><span class="d" id="dataVer" title="Access data is downloaded only when it has changed"></span><span class="d" id="lastChange"></span>
+    <select id="previewRole" class="btn" title="See the tool as a role"><option value="">Preview as…</option></select></div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="chead"><span id="cardTitle"></span><small id="cardSub"></small></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="msg" class="msg"></div>
+    <div class="body" id="body"></div>
+    <div class="pend">
+      <span class="cnt z" id="pendCnt">No pending changes</span>
+      <input id="reason" placeholder="Reason for the change (saved in the audit trail)" maxlength="500">
+      <button class="btn" id="discard">Discard</button>
+      <button class="btn p" id="apply" disabled>Apply</button>
+    </div>
+  </div>
+
+  <div class="card side">
+    <div class="chead"><span>Find a person</span><small id="peopleCount"></small></div>
+    <div class="sbox"><input id="psearch" placeholder="Search name, email or Employee ID" autocomplete="off"><div class="sres" id="sres" style="display:none"></div></div>
+    <div class="qc"><h4><span>Quick check</span></h4>
+      <div class="row" id="qcRow"></div>
+      <div class="qans" id="qans"></div>
+    </div>
+    <div id="pcard"></div>
+    <div class="sec" id="ovList"></div>
+    <div class="sec" id="attn"></div>
+    <div class="counts" id="counts"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="mbox">
+  <div class="chead"><span id="mTitle"></span><button class="btn sm" id="mClose">Close</button></div>
+  <div id="mBody"></div>
+</div></div>
+
+<script>
+/* =====================================================================
+   CONFIG — set accessApiUrl to connect to Catalyst; empty = demo data
+   ===================================================================== */
+var CONFIG = { accessApiUrl: "", cycleName: "Apr-26 cycle", today: "2026-10-01" };
+/* With accessApiUrl set: GET /version returns { version }, GET /admin/state returns the data + version. */
+
+/* Catalogue — same keys as accessapi. Labels can be replaced with the final labels. */
+var SCREENS=[{"key":"appraisalSheet","label":"Appraisal Sheet","group":"Compensation","d":["edit","edit","edit","view"]},{"key":"detailScreen","label":"Detail screen","group":"Compensation","d":["edit","edit","edit","view"]},{"key":"agentTab","label":"Agent tab (right panel)","group":"Compensation","d":["view","view","view","none"],"note":"Also needs the agentReleased switch on"},{"key":"budgetAllocation","label":"Budget allocation","group":"Compensation","d":["view","edit","edit","none"],"note":"Comp Manager edits only if someone reports to them"},{"key":"teamChanges","label":"Team changes","group":"Compensation","d":["view","view","view","none"]},{"key":"appraisalLetters","label":"Appraisal Letters","group":"Compensation","d":["edit","view","none","none"],"note":"Tech ED sees letter stats for own team"},{"key":"delegation","label":"Delegation","group":"Compensation","d":["edit","edit","none","none"],"note":"Tech ED changes go to HR for approval"},{"key":"dashboard","label":"Dashboard","group":"Compensation","d":["view","view","view","view"],"note":"Org-level numbers HR only; others see own team"},{"key":"metrics","label":"Metrics screens (Pay vs median…)","group":"Compensation","d":["view","view","view","none"]},{"key":"budgetConfig","label":"Budget config","group":"HR Operations","hrOnly":true},{"key":"applyBudget","label":"Apply budget","group":"HR Operations","hrOnly":true},{"key":"budgetAudit","label":"Budget audit trail","group":"HR Operations","hrOnly":true},{"key":"cycleMaster","label":"Appraisal Cycle Master","group":"HR Operations","hrOnly":true},{"key":"employeeMaster","label":"Employee Master · Eligibility List","group":"HR Operations","hrOnly":true},{"key":"payroll","label":"Payroll Data · Payroll Upload","group":"HR Operations","hrOnly":true},{"key":"uploads","label":"Uploads (Band, Benchmarks, PB/RB to be Paid, Counter-offer, History)","group":"HR Operations","hrOnly":true},{"key":"agentSetup","label":"Agent setup","group":"HR Operations","hrOnly":true},{"key":"config","label":"Config","group":"HR Operations","hrOnly":true},{"key":"access","label":"Access","group":"HR Operations","hrOnly":true}];
+var ACTIONS=[{"key":"bulkEdit","label":"Bulk edit","group":"Editing","d":[1,1,1,0]},{"key":"promote","label":"Promote (Designation cell)","group":"Editing","d":[1,1,1,0]},{"key":"pbRbBelowPreload","label":"New PB / New RB below the preloaded amount","group":"Editing","d":[1,0,0,0],"fixed":"HR override only"},{"key":"editPbRbToBePaid","label":"Edit PB / RB to be Paid","group":"Editing","d":[0,0,0,0],"fixed":"Upload only — never editable"},{"key":"setOrgPct","label":"Set org % · override per Tech ED","group":"Budget","d":[1,0,0,0],"fixed":"HR only"},{"key":"allotNextLevel","label":"Allot budget to next level","group":"Budget","d":[0,1,1,0]},{"key":"changeBudgetConfig","label":"Change budget config","group":"Budget","d":[1,0,0,0],"fixed":"HR only"},{"key":"delegateRequest","label":"Delegate (request)","group":"Delegation","d":[1,1,0,0]},{"key":"delegateApprove","label":"Approve delegation","group":"Delegation","d":[1,0,0,0],"fixed":"HR only"},{"key":"delegationBulkAssign","label":"Bulk assign","group":"Delegation","d":[1,0,0,0]},{"key":"sendLetters","label":"Generate, review and send letters","group":"Letters","d":[1,0,0,0],"fixed":"HR only"},{"key":"exportLetters","label":"Export letters grid (Excel)","group":"Letters","d":[1,0,0,0]},{"key":"exportGrid","label":"Export Appraisal Sheet (Excel)","group":"Editing","d":[1,1,1,0]},{"key":"uploadBenchmarks","label":"Upload / edit benchmarks","group":"Benchmarks","d":[1,0,0,0],"fixed":"HR only"},{"key":"agentTyped","label":"Typed questions to the agent","group":"Agent","d":[1,1,1,0]},{"key":"agentWhatIf","label":"Run what-ifs","group":"Agent","d":[1,1,1,0]},{"key":"gridLayout","label":"Column order · header wrap","group":"Grid","d":[1,0,0,0],"fixed":"HR only"},{"key":"closeCycle","label":"Close the cycle","group":"Cycle","d":[1,0,0,0],"fixed":"HR only"},{"key":"previewAs","label":"Preview as another role","group":"Access","d":[1,0,0,0],"fixed":"HR only"},{"key":"viewAudit","label":"View audit trails","group":"Access","d":[1,1,0,0]}];
+var FIELDS=[{"key":"name","label":"Employee","kind":"master"},{"key":"designation","label":"Designation","kind":"master"},{"key":"compManager","label":"Comp. Manager","kind":"master"},{"key":"superManager","label":"Super Manager","kind":"master"},{"key":"managerMail","label":"Manager Mail","kind":"master"},{"key":"appraiser","label":"Appraiser / Super Manager","kind":"master"},{"key":"rbPaid","label":"RB to be Paid","kind":"upload"},{"key":"rbMonth","label":"Mo (RB)","kind":"upload"},{"key":"pbPaid","label":"PB to be Paid","kind":"upload"},{"key":"pbMonth","label":"Mo (PB)","kind":"upload"},{"key":"basePay","label":"Current Annual Base Pay","kind":"master"},{"key":"targetPB","label":"Target PB Allocated for May","kind":"master"},{"key":"newPB","label":"New PB to be Offered","kind":"input"},{"key":"newPBInst","label":"Inst.","kind":"input"},{"key":"totalPB","label":"Total of PB","kind":"calc","deps":["newPB"]},{"key":"newRB","label":"New RB","kind":"input"},{"key":"totalBonus","label":"Total Bonus","kind":"calc","deps":["totalPB","newRB"]},{"key":"hikeAmt","label":"Hike Amount","kind":"input"},{"key":"hikePct","label":"Hike %","kind":"pair","pairOf":"hikeAmt"},{"key":"totalCtc","label":"Total CTC with Rewards","kind":"calc","deps":["newBasePay","totalBonus"]},{"key":"totalBonusHikeAmt","label":"Total Bonus Hike Amount","kind":"calc","deps":["totalBonus"]},{"key":"totalBonusHikePct","label":"Bonus Hike %","kind":"calc","deps":["totalBonus"]},{"key":"totalRewardsHikeAmt","label":"Total Rewards Hike Amount","kind":"calc","deps":["totalCtc"]},{"key":"totalRewardsHikePct","label":"Rewards Hike %","kind":"calc","deps":["totalCtc"]},{"key":"newBasePay","label":"New Base Pay","kind":"calc","deps":["basePay","hikeAmt"]},{"key":"tpbNext","label":"Target PB for Next Year","kind":"input"},{"key":"promo","label":"Promo?","kind":"input"},{"key":"newTitle","label":"New Title","kind":"input"},{"key":"remarks","label":"Remarks","kind":"input"}];
+var LIMIT_LABEL = { edit: "Edit", read: "Read", hidden: "Hidden" };
+var STRICT = { edit: 0, read: 1, hidden: 2 };
+var LEVEL_LABEL = { none: "None", view: "View", edit: "Edit" };
+
+/* ---------- state ---------- */
+var S = {
+  tab: "screens", roles: [], matrix: { screens: {}, actions: {}, fields: {} }, people: [], deleg: {}, overrides: [], log: [],
+  pending: {}, sel: null, fieldSearch: "", fieldKind: "", fieldShowRole: "", fieldShowLim: "", peopleRole: "", peopleSearch: "",
+  logFrom: "", logTo: "", qc: { q: "who" }
+};
+var tmp = 0;
+
+/* ---------- demo data ---------- */
+function demo() {
+  S.roles = [
+    { key: "hr", label: "HR Admin", source: "catalyst", catalystRole: "HR Admin", seesAll: true, fixed: true },
+    { key: "techEd", label: "Tech ED", source: "delegation", seesAll: false, fixed: true },
+    { key: "compMgr", label: "Comp Manager", source: "delegation", seesAll: false, fixed: true }
+  ];
+  S.roles.forEach(function (r, ri) { initRole(r.key, ri); });
+  S.matrix.screens.compMgr.appraisalSheet = "edit";
+  // people: from Employee Master + Delegation + Catalyst roles
+  S.people = [
+    { empId: "E1001", name: "Priya Nair", email: "priya.nair@company.com", active: true, inEM: true, catalystRole: "HR Admin" },
+    { empId: "E1002", name: "Kavya Menon", email: "kavya.menon@company.com", active: true, inEM: true, catalystRole: "HR Admin" },
+    { empId: "E1044", name: "Raj Mehta", email: "raj.mehta@company.com", active: true, inEM: true },
+    { empId: "E1102", name: "Vikram Rao", email: "vikram.rao@company.com", active: true, inEM: true },
+    { empId: "E1210", name: "Anita Sharma", email: "anita.sharma@company.com", active: true, inEM: true },
+    { empId: "E1233", name: "Suresh Iyer", email: "suresh.iyer@company.com", active: true, inEM: true },
+    { empId: "E1301", name: "Meera K", email: "", active: true, inEM: true },
+    { empId: "E1355", name: "R. Gupta", email: "r.gupta@company.com", active: false, inEM: true },
+    { empId: "E1402", name: "Nikhil Das", email: "nikhil.das@company.com", active: true, inEM: true },
+    { empId: "E2291", name: "E2291", email: "", active: true, inEM: false }
+  ];
+  // Delegation (active cycle): who is Tech ED / Comp Manager, and team sizes
+  S.deleg = {
+    techEd: { E1044: 31, E1102: 28 },
+    compMgr: { E1210: 14, E1233: 12, E1301: 9, E1355: 6, E1402: 11, E2291: 7 }
+  };
+  S.overrides = [
+    { id: "o1", empId: "E1210", type: "screen", key: "appraisalLetters", value: "view", to: "2026-10-31", reason: "Check her team's letters before dispatch", by: "priya.nair@company.com", at: "2026-10-01" },
+    { id: "o2", empId: "E1044", type: "action", key: "bulkEdit", value: false, to: "", reason: "Bulk edit errors last cycle", by: "priya.nair@company.com", at: "2026-09-29" },
+    { id: "o3", empId: "E1102", type: "team", key: "E1233", value: "add", to: "2026-10-31", reason: "Covering Suresh's team", by: "kavya.menon@company.com", at: "2026-09-15" }
+  ];
+  S.log = [
+    { at: "2026-10-01 10:02:11", by: "priya.nair@company.com", kind: "override", target: "Anita Sharma", role: "", from: "None", to: "Appraisal Letters: View (till 31-Oct)", reason: "Check her team's letters before dispatch" },
+    { at: "2026-09-30 09:00:00", by: "Catalyst", kind: "catalyst", target: "Kavya Menon", role: "hr", from: "", to: "HR Admin (Catalyst role)", reason: "Seen on load — role given in Catalyst" },
+    { at: "2026-09-29 16:12:04", by: "priya.nair@company.com", kind: "override", target: "Raj Mehta", role: "", from: "Yes", to: "Bulk edit: No", reason: "Bulk edit errors last cycle" },
+    { at: "2026-09-29 16:10:40", by: "priya.nair@company.com", kind: "screen", target: "delegation", role: "techEd", from: "view", to: "edit", reason: "Tech EDs raise delegation requests" }
+  ];
+}
+function initRole(key, ri) {
+  var dflt = ri == null ? -1 : ri;
+  S.matrix.screens[key] = {}; S.matrix.actions[key] = {}; S.matrix.fields[key] = {};
+  SCREENS.forEach(function (s) { S.matrix.screens[key][s.key] = s.hrOnly ? (key === "hr" ? "edit" : "none") : (dflt >= 0 ? s.d[dflt] : "none"); });
+  ACTIONS.forEach(function (a) { S.matrix.actions[key][a.key] = dflt >= 0 ? !!a.d[dflt] : false; });
+  FIELDS.forEach(function (f) {
+    if (f.kind === "upload" || f.kind === "master") S.matrix.fields[key][f.key] = "read";
+    else if (f.kind === "input") S.matrix.fields[key][f.key] = dflt >= 0 ? "edit" : "read";
+  });
+}
+
+/* ---------- helpers ---------- */
+function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function byKey(list, k) { for (var i = 0; i < list.length; i++) if (list[i].key === k) return list[i]; return null; }
+function fmtD(d) { if (!d) return ""; var m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; var p = d.split("-"); return p[2] + "-" + m[+p[1] - 1]; }
+function roles() {   // includes pending new roles, excludes retired (incl. pending retire)
+  var list = S.roles.filter(function (r) { return !r.retired && !S.pending["roleRetire|" + r.key]; });
+  Object.keys(S.pending).forEach(function (k) { var p = S.pending[k]; if (p.kind === "roleAdd") list.push(p.role); });
+  return list;
+}
+function roleOf(key) { var r = null; S.roles.concat(Object.keys(S.pending).map(function (k) { return S.pending[k].role; }).filter(Boolean)).forEach(function (x) { if (x.key === key) r = x; }); return r; }
+function roleLabel(k) { var r = roleOf(k); return r ? r.label : k; }
+function saved(kind, role, key) { var g = kind === "screen" ? "screens" : kind === "action" ? "actions" : "fields"; return S.matrix[g][role] ? S.matrix[g][role][key] : undefined; }
+function cur(kind, role, key) { var p = S.pending[kind + "|" + role + "|" + key]; return p ? p.to : saved(kind, role, key); }
+function setVal(kind, role, key, to) {
+  var k = kind + "|" + role + "|" + key;
+  if (saved(kind, role, key) === to) delete S.pending[k]; else S.pending[k] = { kind: kind, role: role, key: key, to: to };
+  renderAll();
+}
+function personByEmp(id) { for (var i = 0; i < S.people.length; i++) if (S.people[i].empId === id) return S.people[i]; return null; }
+function activeOverrides() {   // saved minus pending removals, plus pending adds; not expired
+  var list = S.overrides.filter(function (o) { return !S.pending["ovRemove|" + o.id]; });
+  Object.keys(S.pending).forEach(function (k) { var p = S.pending[k]; if (p.kind === "ovAdd") list.push(p.ov); });
+  return list.filter(function (o) { return !o.to || o.to >= CONFIG.today; });
+}
+function ovFor(empId) { return activeOverrides().filter(function (o) { return o.empId === empId; }); }
+
+/* Role of a person: Catalyst role first, then Delegation; then a role override */
+function baseRole(p) {
+  if (p.catalystRole) { var r = null; roles().forEach(function (x) { if (x.source === "catalyst" && x.catalystRole === p.catalystRole) r = x; }); if (r) return { role: r.key, from: "Catalyst role" }; }
+  if (S.deleg.techEd[p.empId] != null) return { role: "techEd", from: "Delegation · " + CONFIG.cycleName.replace(" cycle", "") };
+  if (S.deleg.compMgr[p.empId] != null) return { role: "compMgr", from: "Delegation · " + CONFIG.cycleName.replace(" cycle", "") };
+  return { role: "", from: "No role" };
+}
+function effRole(p) {
+  var b = baseRole(p), ro = ovFor(p.empId).filter(function (o) { return o.type === "role"; })[0];
+  if (ro) return { role: ro.value, from: "Override (was " + (b.role ? roleLabel(b.role) : "no role") + ")", ov: ro, base: b };
+  return { role: b.role, from: b.from, base: b };
+}
+function canLogIn(p) { return p.inEM && p.active && !!p.email; }
+
+/* Effective access of one person: locked rule → override → role */
+function effScreen(p, key) {
+  var s = byKey(SCREENS, key), r = effRole(p).role;
+  if (!canLogIn(p) || !r) return { v: "none", src: !canLogIn(p) ? "cannot log in" : "no role" };
+  if (s.hrOnly) return { v: r === "hr" ? "edit" : "none", src: "locked", locked: true };
+  var o = ovFor(p.empId).filter(function (x) { return x.type === "screen" && x.key === key; })[0];
+  if (o) return { v: o.value, src: "override", ov: o };
+  return { v: cur("screen", r, key), src: "role", role: r };
+}
+function effAction(p, key) {
+  var a = byKey(ACTIONS, key), r = effRole(p).role;
+  if (!canLogIn(p) || !r) return { v: false, src: !canLogIn(p) ? "cannot log in" : "no role" };
+  if (a.fixed) return { v: !!cur("action", r, key), src: "locked", locked: true, role: r };
+  var o = ovFor(p.empId).filter(function (x) { return x.type === "action" && x.key === key; })[0];
+  if (o) return { v: o.value, src: "override", ov: o };
+  return { v: !!cur("action", r, key), src: "role", role: r };
+}
+function limitsFor(role, ovs) {
+  var lim = {}, seen = {};
+  FIELDS.forEach(function (f) { if (f.kind !== "calc" && f.kind !== "pair") lim[f.key] = role ? cur("field", role, f.key) : "hidden"; });
+  (ovs || []).forEach(function (o) { if (o.type === "field" && lim[o.key] !== undefined) lim[o.key] = o.value; });
+  FIELDS.forEach(function (f) { if (f.kind === "pair") lim[f.key] = lim[f.pairOf]; });
+  function get(k) {
+    var f = byKey(FIELDS, k);
+    if (f.kind !== "calc") return lim[k];
+    if (seen[k]) return lim[k] || "read";
+    seen[k] = true;
+    var worst = "read";
+    (f.deps || []).forEach(function (d) { var v = get(d); if (STRICT[v] > STRICT[worst]) worst = v; });
+    return (lim[k] = worst);
+  }
+  FIELDS.forEach(function (f) { if (f.kind === "calc") get(f.key); });
+  return lim;
+}
+function effField(p, key) {
+  var r = effRole(p).role, ovs = ovFor(p.empId);
+  var lim = limitsFor(r, ovs), f = byKey(FIELDS, key);
+  var o = ovs.filter(function (x) { return x.type === "field" && x.key === (f.kind === "pair" ? f.pairOf : key); })[0];
+  return { v: lim[key], src: f.kind === "calc" ? "calculated" : f.kind === "pair" ? "pair" : o ? "override" : "role", ov: o, role: r };
+}
+function teamOf(p) {
+  var r = effRole(p).role, ro = roleOf(r), n = 0, txt = "";
+  if (!r) return { n: 0, txt: "No team" };
+  if (ro && ro.seesAll) txt = "All employees";
+  else if (r === "techEd") { n = S.deleg.techEd[p.empId] || 0; txt = n + " employees (Appraiser Tech ED = " + p.name + ")"; }
+  else if (r === "compMgr") { n = S.deleg.compMgr[p.empId] || 0; txt = n + " employees (Comp Manager = " + p.name + ")"; }
+  else txt = "No team";
+  var extra = ovFor(p.empId).filter(function (o) { return o.type === "team"; }).map(function (o) { var q = personByEmp(o.key); return (q ? q.name : o.key) + "'s team"; });
+  return { n: n, txt: txt, extra: extra };
+}
+function ovText(o) {
+  if (o.type === "screen") return byKey(SCREENS, o.key).label + ": " + LEVEL_LABEL[o.value];
+  if (o.type === "action") return byKey(ACTIONS, o.key).label + ": " + (o.value ? "Yes" : "No");
+  if (o.type === "field") return byKey(FIELDS, o.key).label + ": " + LIMIT_LABEL[o.value];
+  if (o.type === "role") return "Role: " + roleLabel(o.value);
+  if (o.type === "team") { var q = personByEmp(o.key); return "+ " + (q ? q.name : o.key) + "'s team"; }
+  return "";
+}
+function showMsg(t, ok) { var m = document.getElementById("msg"); m.className = "msg " + (ok ? "ok" : "err"); m.textContent = t; }
+function clearMsg() { document.getElementById("msg").className = "msg"; }
+
+/* ---------- tabs ---------- */
+var TABS = [
+  { key: "people", label: "People", title: "People", sub: "From Catalyst roles and Delegation — nobody is added here" },
+  { key: "screens", label: "Screens", title: "Screens by role", sub: "None · View (read-only) · Edit" },
+  { key: "actions", label: "Actions", title: "Actions by role", sub: "Yes · No" },
+  { key: "fields", label: "Fields", title: "Field limits by role", sub: "Edit · Read · Hidden" },
+  { key: "overrides", label: "Overrides", title: "Personal overrides", sub: "Override → role. Locked rules always apply" },
+  { key: "scope", label: "Extra scope", title: "Extra scope", sub: "Extra teams for a set period" },
+  { key: "audit", label: "Audit trail", title: "Access audit trail", sub: "Includes role changes seen from Catalyst" }
+];
+function pendFor(t) {
+  var n = 0;
+  Object.keys(S.pending).forEach(function (k) {
+    var p = S.pending[k], c = p.kind;
+    if ((t === "screens" && (c === "screen" || c === "roleAdd" || c === "roleRetire")) || (t === "actions" && c === "action") || (t === "fields" && c === "field") ||
+        (t === "overrides" && (c === "ovAdd" || c === "ovRemove") && !(p.ov && p.ov.type === "team")) || (t === "scope" && ((c === "ovAdd" && p.ov.type === "team") || (c === "ovRemove" && p.type === "team")))) n++;
+  });
+  return n;
+}
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = TABS.map(function (t) {
+    var n = pendFor(t.key), cnt = t.key === "overrides" ? activeOverrides().filter(function (o) { return o.type !== "team"; }).length : null;
+    return '<button class="tab' + (S.tab === t.key ? " on" : "") + '" data-tab="' + t.key + '">' + t.label + (n ? '<span class="n">' + n + "</span>" : cnt ? '<span class="n" style="background:#EEF2F7;color:#334155">' + cnt + "</span>" : "") + "</button>";
+  }).join("");
+  var t = byKey(TABS, S.tab);
+  document.getElementById("cardTitle").textContent = t.title;
+  document.getElementById("cardSub").textContent = t.sub;
+}
+function roleHead() {
+  return roles().map(function (r) {
+    var isNew = !!S.pending["roleAdd|" + r.key];
+    return "<th>" + esc(r.label) + (isNew ? ' <span class="pill e">new</span>' : "") + '<span class="src">' + (r.source === "catalyst" ? "Catalyst role" + (r.catalystRole && r.catalystRole !== r.label ? ": " + esc(r.catalystRole) : "") : "Delegation") + (r.seesAll && r.key !== "hr" ? " · all employees" : "") + "</span>" +
+      (!r.fixed ? '<span class="rtools"><button data-retire="' + r.key + '">' + (isNew ? "Undo" : "Retire") + "</button></span>" : "") + "</th>";
+  }).join("");
+}
+
+/* ---------- Screens ---------- */
+function seg(kind, role, key, value, savedV, disabled) {
+  return '<span class="cell' + (value !== savedV ? " chg" : "") + '"><span class="seg">' + ["none", "view", "edit"].map(function (o) {
+    return '<button class="' + (o === value ? "on " + o : "") + '"' + (disabled ? " disabled" : ' data-set="' + kind + "|" + role + "|" + key + "|" + o + '"') + ">" + LEVEL_LABEL[o] + "</button>";
+  }).join("") + "</span></span>";
+}
+function renderScreens() {
+  var rs = roles();
+  var h = "<table><tr><th>Screen</th>" + roleHead() + '<th style="text-align:right"><span class="addrole" id="addRole">+ Add role</span></th></tr>', g = "";
+  SCREENS.forEach(function (s) {
+    if (s.group !== g) { g = s.group; h += '<tr class="grp"><td colspan="' + (rs.length + 2) + '">' + esc(g) + "</td></tr>"; }
+    h += "<tr><td>" + esc(s.label) + (s.note ? '<span class="note">' + esc(s.note) + "</span>" : "") + "</td>";
+    if (s.hrOnly) h += "<td>" + seg("screen", "hr", s.key, "edit", "edit", true) + '</td><td colspan="' + rs.length + '" class="lock">HR only — locked</td>';
+    else { rs.forEach(function (r) { h += "<td>" + seg("screen", r.key, s.key, cur("screen", r.key, s.key), saved("screen", r.key, s.key)) + "</td>"; }); h += "<td></td>"; }
+    h += "</tr>";
+  });
+  return h + "</table>";
+}
+
+/* ---------- Actions ---------- */
+function renderActions() {
+  var rs = roles(), h = "<table><tr><th>Action</th>" + roleHead() + "</tr>", g = "";
+  ACTIONS.forEach(function (a) {
+    if (a.group !== g) { g = a.group; h += '<tr class="grp"><td colspan="' + (rs.length + 1) + '">' + esc(g) + "</td></tr>"; }
+    h += "<tr><td>" + esc(a.label) + (a.fixed ? '<span class="note">🔒 ' + esc(a.fixed) + "</span>" : "") + "</td>";
+    rs.forEach(function (r) {
+      var v = !!cur("action", r.key, a.key), sv = !!saved("action", r.key, a.key);
+      if (a.fixed) { h += '<td class="lock">' + (v ? "Yes" : "No") + "</td>"; return; }
+      h += '<td><span class="cell' + (v !== sv ? " chg" : "") + '"><span class="yn"><button class="' + (v ? "on y" : "") + '" data-act="' + r.key + "|" + a.key + '|1">Yes</button><button class="' + (!v ? "on n" : "") + '" data-act="' + r.key + "|" + a.key + '|0">No</button></span></span></td>';
+    });
+    h += "</tr>";
+  });
+  return h + "</table>";
+}
+
+/* ---------- Fields ---------- */
+function renderFields() {
+  var rs = roles(), lims = {};
+  rs.forEach(function (r) { lims[r.key] = limitsFor(r.key, []); });
+  var h = '<div class="tools"><input type="text" id="fieldSearch" placeholder="Search field" value="' + esc(S.fieldSearch) + '">' +
+    '<select id="fieldKind"><option value="">All kinds</option><option value="input">Input</option><option value="master">Master</option><option value="upload">Upload only</option><option value="calc">Calculated</option><option value="pair">Paired</option></select>' +
+    '<span class="hint">Show fields where</span><select id="fieldShowRole"><option value="">any role</option>' + rs.map(function (r) { return '<option value="' + r.key + '">' + esc(r.label) + "</option>"; }).join("") + "</select>" +
+    '<span class="hint">is</span><select id="fieldShowLim"><option value="">anything</option><option value="edit">Edit (can edit)</option><option value="read">Read</option><option value="hidden">Hidden (can’t see)</option></select></div>';
+  h += "<table><tr><th>Field</th><th>Kind</th>" + roleHead() + "</tr>";
+  var q = S.fieldSearch.toLowerCase(), n = 0;
+  FIELDS.forEach(function (f) {
+    if (S.fieldKind && f.kind !== S.fieldKind) return;
+    if (q && (f.label + " " + f.key).toLowerCase().indexOf(q) < 0) return;
+    if (S.fieldShowLim) {
+      var hit = (S.fieldShowRole ? [S.fieldShowRole] : rs.map(function (r) { return r.key; })).some(function (rk) { return lims[rk] && lims[rk][f.key] === S.fieldShowLim; });
+      if (!hit) return;
+    }
+    n++;
+    var kl = { input: "Input", master: "Master", upload: "Upload only", calc: "Calculated", pair: "Paired" }[f.kind];
+    h += "<tr><td>" + esc(f.label) + ' <span class="key">' + esc(f.key) + "</span>" +
+      (f.kind === "calc" ? '<span class="note">from ' + f.deps.map(function (d) { return esc(byKey(FIELDS, d).label); }).join(" + ") + "</span>" : "") +
+      '</td><td><span class="kind ' + f.kind + '">' + kl + "</span></td>";
+    rs.forEach(function (r) {
+      if (f.kind === "calc") { h += '<td class="derived">' + LIMIT_LABEL[lims[r.key][f.key]] + " (auto)</td>"; return; }
+      if (f.kind === "pair") { h += '<td class="derived">' + LIMIT_LABEL[lims[r.key][f.key]] + " (same as " + esc(byKey(FIELDS, f.pairOf).label) + ")</td>"; return; }
+      var v = cur("field", r.key, f.key), sv = saved("field", r.key, f.key);
+      var opts = f.kind === "input" ? ["edit", "read", "hidden"] : ["read", "hidden"];
+      h += '<td><span class="cell' + (v !== sv ? " chg" : "") + '"><select class="lim ' + v + '" data-fld="' + r.key + "|" + f.key + '">' +
+        opts.map(function (o) { return '<option value="' + o + '"' + (o === v ? " selected" : "") + ">" + LIMIT_LABEL[o] + "</option>"; }).join("") + "</select></span></td>";
+    });
+    h += "</tr>";
+  });
+  if (!n) h += '<tr><td colspan="' + (rs.length + 2) + '" class="empty">No field matches.</td></tr>';
+  return h + "</table>";
+}
+
+/* ---------- People ---------- */
+function flagsOf(p) {
+  var f = [];
+  if (!p.inEM) f.push(["Not in Employee Master", ""]);
+  else if (!p.email) f.push(["No email", ""]);
+  if (p.inEM && !p.active) f.push(["Inactive in Employee Master", "a"]);
+  if (canLogIn(p) && !effRole(p).role) f.push(["No role", "a"]);
+  return f;
+}
+function renderPeople() {
+  var rs = roles();
+  var h = '<div class="tools"><input type="text" id="peopleSearch" placeholder="Search" value="' + esc(S.peopleSearch) + '"><select id="peopleRole"><option value="">All roles</option>' +
+    rs.map(function (r) { return '<option value="' + r.key + '"' + (S.peopleRole === r.key ? " selected" : "") + ">" + esc(r.label) + "</option>"; }).join("") +
+    '<option value="_attn"' + (S.peopleRole === "_attn" ? " selected" : "") + '>Needs attention</option></select><button class="btn sm" id="exportPeople">Export (CSV)</button>' +
+    '<span class="hint">To change who is a Tech ED / Comp Manager, change Delegation. HR Admin and added roles are given in Catalyst.</span></div>';
+  h += "<table><tr><th>Person</th><th>Role</th><th>Role from</th><th>Team</th><th>Overrides</th><th>Flags</th></tr>";
+  var q = S.peopleSearch.toLowerCase(), n = 0;
+  S.people.forEach(function (p) {
+    var er = effRole(p), fl = flagsOf(p), t = teamOf(p);
+    if (S.peopleRole === "_attn" ? !fl.length : S.peopleRole && er.role !== S.peopleRole) return;
+    if (q && (p.name + " " + p.email + " " + p.empId).toLowerCase().indexOf(q) < 0) return;
+    n++;
+    h += '<tr style="cursor:pointer" data-person="' + esc(p.empId) + '"><td><b>' + esc(p.name) + '</b><span class="note">' + esc(p.empId) + (p.email ? " · " + esc(p.email) : "") + "</span></td>" +
+      "<td>" + (er.role ? '<span class="role ' + (roleOf(er.role).fixed ? er.role : "custom") + '">' + esc(roleLabel(er.role)) + "</span>" : '<span class="derived">—</span>') + '</td><td style="font-size:12px">' + esc(er.from) + '</td><td style="font-size:12px">' + esc(t.txt) + (t.extra && t.extra.length ? " · + " + esc(t.extra.join(", ")) : "") + "</td>" +
+      "<td>" + (ovFor(p.empId).length || "") + "</td><td>" + fl.map(function (x) { return '<span class="flag ' + x[1] + '">' + esc(x[0]) + "</span> "; }).join("") + "</td></tr>";
+  });
+  if (!n) h += '<tr><td colspan="6" class="empty">No one matches.</td></tr>';
+  return h + "</table>";
+}
+
+/* ---------- Overrides & Extra scope ---------- */
+function ovRows(filterTeam) {
+  var rows = S.overrides.map(function (o) { return { o: o, removing: !!S.pending["ovRemove|" + o.id] }; });
+  Object.keys(S.pending).forEach(function (k) { var p = S.pending[k]; if (p.kind === "ovAdd") rows.push({ o: p.ov, adding: true }); });
+  return rows.filter(function (r) { return filterTeam ? r.o.type === "team" : r.o.type !== "team"; });
+}
+function renderOvTable(team) {
+  var h = '<div class="tools"><button class="btn p sm" data-newov="' + (team ? "team" : "") + '">+ ' + (team ? "Extra team" : "Override") + '</button><span class="hint">' +
+    (team ? "Adds another person's team to someone, until the end date." : "An override applies to one person and wins over their role. HR Operations screens and fixed actions can’t be overridden.") + "</span></div>";
+  h += "<table><tr><th>Person</th><th>" + (team ? "Extra team" : "Override") + "</th><th>Ends</th><th>Reason</th><th>Set by</th><th></th></tr>";
+  var rows = ovRows(team);
+  rows.forEach(function (r) {
+    var p = personByEmp(r.o.empId), exp = r.o.to && r.o.to < CONFIG.today;
+    h += "<tr" + (r.removing || exp ? ' style="opacity:.55' + (r.removing ? ";text-decoration:line-through" : "") + '"' : "") + "><td><b>" + esc(p ? p.name : r.o.empId) + "</b>" + (r.adding ? ' <span class="pill e">new</span>' : "") + "</td><td>" + esc(ovText(r.o)) + "</td><td>" +
+      (r.o.to ? esc(fmtD(r.o.to)) + (exp ? " (ended)" : "") : '<span class="flag a">No end date</span>') + '</td><td style="font-size:12px">' + esc(r.o.reason || "(pending)") + '</td><td style="font-size:12px">' + esc(r.o.by || "") + "</td><td>" +
+      (r.adding ? '<button class="btn sm" data-ovundo="' + esc(r.o.id) + '">Undo</button>' : '<button class="btn sm" data-ovrm="' + esc(r.o.id) + '">' + (r.removing ? "Keep" : "Remove") + "</button>") + "</td></tr>";
+  });
+  if (!rows.length) h += '<tr><td colspan="6" class="empty">None.</td></tr>';
+  return h + "</table>";
+}
+
+/* ---------- Audit ---------- */
+function auditTarget(l) {
+  if (l.kind === "screen") { var s = byKey(SCREENS, l.target); return "Screen · " + (s ? s.label : l.target); }
+  if (l.kind === "action") { var a = byKey(ACTIONS, l.target); return "Action · " + (a ? a.label : l.target); }
+  if (l.kind === "field") { var f = byKey(FIELDS, l.target); return "Field · " + (f ? f.label : l.target); }
+  if (l.kind === "override") return "Override · " + l.target;
+  if (l.kind === "catalyst") return "Catalyst role · " + l.target;
+  if (l.kind === "role") return "Role · " + l.target;
+  return l.target;
+}
+function renderAudit() {
+  var h = '<div class="tools"><span class="hint">From</span><input type="date" id="logFrom" value="' + esc(S.logFrom) + '"><span class="hint">To</span><input type="date" id="logTo" value="' + esc(S.logTo) + '"><span class="hint">Audit lines can’t be edited or deleted.</span></div>';
+  h += "<table><tr><th>Date</th><th>Changed by</th><th>What</th><th>Role</th><th>Old</th><th>New</th><th>Reason</th></tr>";
+  var rows = S.log.filter(function (l) { var d = String(l.at).slice(0, 10); return (!S.logFrom || d >= S.logFrom) && (!S.logTo || d <= S.logTo); });
+  rows.forEach(function (l) {
+    h += '<tr><td style="white-space:nowrap">' + esc(l.at) + "</td><td>" + esc(l.by) + "</td><td>" + esc(auditTarget(l)) + "</td><td>" + esc(l.role ? roleLabel(l.role) : "") + "</td><td>" + esc(l.from) + "</td><td>" + esc(l.to) + '</td><td style="font-size:12px">' + esc(l.reason) + "</td></tr>";
+  });
+  if (!rows.length) h += '<tr><td colspan="7" class="empty">No changes in this period.</td></tr>';
+  return h + "</table>";
+}
+
+/* ---------- right side ---------- */
+function renderSearch() {
+  var q = document.getElementById("psearch").value.trim().toLowerCase(), box = document.getElementById("sres");
+  if (!q) { box.style.display = "none"; return; }
+  var hits = S.people.filter(function (p) { return (p.name + " " + p.email + " " + p.empId).toLowerCase().indexOf(q) > -1; }).slice(0, 12);
+  box.innerHTML = hits.length ? hits.map(function (p) { var r = effRole(p).role; return '<div data-person="' + esc(p.empId) + '"><span><b>' + esc(p.name) + "</b> " + esc(p.empId) + "</span><span>" + (r ? esc(roleLabel(r)) : "—") + "</span></div>"; }).join("") : '<div class="derived">No one found</div>';
+  box.style.display = "block";
+}
+function renderCard() {
+  var el = document.getElementById("pcard"), p = S.sel && personByEmp(S.sel);
+  if (!p) { el.innerHTML = '<div class="pcard derived">Search a person to see their role, team and overrides.</div>'; return; }
+  var er = effRole(p), t = teamOf(p), fl = flagsOf(p);
+  el.innerHTML = '<div class="pcard"><div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><div><h3>' + esc(p.name) + '</h3><div class="meta">' + esc(p.empId) + (p.email ? " · " + esc(p.email) : "") + "</div></div>" +
+    (er.role ? '<span class="role ' + (roleOf(er.role).fixed ? er.role : "custom") + '">' + esc(roleLabel(er.role)) + "</span>" : "") + "</div>" +
+    '<div class="kv"><b>Role from</b><span>' + esc(er.from) + "</span><b>Team</b><span>" + esc(t.txt) + "</span><b>Extra team</b><span>" + (t.extra && t.extra.length ? esc(t.extra.join(", ")) : "—") + "</span></div>" +
+    fl.map(function (x) { return '<div style="margin-top:6px"><span class="flag ' + x[1] + '">' + esc(x[0]) + "</span></div>"; }).join("") +
+    ovFor(p.empId).map(function (o) { return '<div class="ov"><span>' + esc(ovText(o)) + (o.to ? " · till " + esc(fmtD(o.to)) : ' · <span class="flag a">No end date</span>') + '</span><button class="btn sm" data-ovrm="' + esc(o.id) + '">Remove</button></div>'; }).join("") +
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" data-newov="" data-for="' + esc(p.empId) + '">+ Override</button><button class="btn sm" data-pvperson="' + esc(p.empId) + '">Preview as ' + esc(p.name.split(" ")[0]) + "</button></div></div>";
+}
+function renderSideLists() {
+  var ovs = activeOverrides();
+  document.getElementById("ovList").innerHTML = "<h4><span>Overrides (" + ovs.length + ')</span><span class="link" data-tab="overrides">See all ›</span></h4>' +
+    (ovs.length ? ovs.slice(0, 5).map(function (o) { var p = personByEmp(o.empId); return '<div class="li" data-person="' + esc(o.empId) + '"><span>' + esc(p ? p.name : o.empId) + "</span><span>" + esc(ovText(o)) + (o.to ? " · " + esc(fmtD(o.to)) : "") + "</span></div>"; }).join("") : '<div class="derived">None</div>');
+  var at = [];
+  S.people.forEach(function (p) { flagsOf(p).forEach(function (f) { at.push({ p: p, t: f[0], c: f[1] }); }); });
+  ovs.filter(function (o) { return !o.to; }).forEach(function (o) { at.push({ p: personByEmp(o.empId), t: "Override with no end date", c: "a" }); });
+  document.getElementById("attn").innerHTML = "<h4><span>Needs attention (" + at.length + ")</span></h4>" +
+    (at.length ? at.map(function (x) { return '<div class="li" data-person="' + esc(x.p.empId) + '"><span>' + esc(x.p.name) + '</span><span class="flag ' + x.c + '">' + esc(x.t) + "</span></div>"; }).join("") : '<div class="derived">Nothing</div>');
+  var c = {}; S.people.forEach(function (p) { var r = effRole(p).role; if (r && canLogIn(p)) c[r] = (c[r] || 0) + 1; });
+  document.getElementById("counts").textContent = roles().map(function (r) { return r.label + " " + (c[r.key] || 0); }).join(" · ");
+  document.getElementById("peopleCount").textContent = S.people.length + " people";
+}
+
+/* ---------- Quick check (no AI — looks up the access data on this screen) ---------- */
+function opt(v, l, sel) { return '<option value="' + esc(v) + '"' + (v === sel ? " selected" : "") + ">" + esc(l) + "</option>"; }
+function targetOptions(kindSel) {
+  var g = { screen: SCREENS.map(function (s) { return ["screen:" + s.key, s.label]; }), action: ACTIONS.map(function (a) { return ["action:" + a.key, a.label]; }), field: FIELDS.map(function (f) { return ["field:" + f.key, f.label]; }) };
+  var kinds = kindSel ? [kindSel] : ["screen", "action", "field"], h = "";
+  kinds.forEach(function (k) { h += '<optgroup label="' + { screen: "Screens", action: "Actions", field: "Fields" }[k] + '">' + g[k].map(function (x) { return opt(x[0], x[1], S.qc.t); }).join("") + "</optgroup>"; });
+  return h;
+}
+function levelOptions() {
+  var k = (S.qc.t || "screen:").split(":")[0];
+  var l = k === "screen" ? [["view", "View (read-only)"], ["edit", "Edit"], ["none", "None"]] : k === "action" ? [["true", "Yes"], ["false", "No"]] : [["edit", "Edit"], ["read", "Read"], ["hidden", "Hidden"]];
+  if (!l.some(function (x) { return x[0] === S.qc.l; })) S.qc.l = l[0][0];
+  return l.map(function (x) { return opt(x[0], x[1], S.qc.l); }).join("");
+}
+function personOptions() {
+  if (!S.qc.p) S.qc.p = S.sel || (S.people[0] && S.people[0].empId);
+  return S.people.map(function (p) { return opt(p.empId, p.name, S.qc.p); }).join("");
+}
+function renderQC() {
+  var q = S.qc.q, h = '<select data-qc="q">' + [["who", "Who has"], ["does", "Does"], ["can", "Can"], ["why", "Why does"], ["what", "What does"]].map(function (x) { return opt(x[0], x[1], q); }).join("") + "</select>";
+  if (q === "who") { if (!S.qc.t) S.qc.t = "screen:appraisalSheet"; h += '<select data-qc="l">' + levelOptions() + '</select><span class="hint">on</span><select data-qc="t">' + targetOptions() + "</select>"; }
+  if (q === "does") { if (!S.qc.t || S.qc.t.indexOf("screen:") !== 0) S.qc.t = "screen:payroll"; h += '<select data-qc="p">' + personOptions() + '</select><span class="hint">have access to</span><select data-qc="t">' + targetOptions("screen") + "</select>"; }
+  if (q === "can") { if (!S.qc.t || S.qc.t.indexOf("action:") !== 0) S.qc.t = "action:bulkEdit"; h += '<select data-qc="p">' + personOptions() + '</select><select data-qc="t">' + targetOptions("action") + "</select>"; }
+  if (q === "why") { if (!S.qc.t) S.qc.t = "screen:appraisalLetters"; h += '<select data-qc="p">' + personOptions() + '</select><span class="hint">have this access to</span><select data-qc="t">' + targetOptions() + "</select>"; }
+  if (q === "what") { h += '<select data-qc="p">' + personOptions() + '</select><span class="hint">have</span>'; }
+  h += '<button class="btn p sm" id="qcGo">Check</button>';
+  document.getElementById("qcRow").innerHTML = h;
+}
+function srcText(e) {
+  if (e.src === "locked") return "Locked rule";
+  if (e.src === "override") return "Override: " + (e.ov.reason || "") + " — set by " + (e.ov.by || "HR") + (e.ov.at ? " on " + fmtD(e.ov.at) : "") + (e.ov.to ? ", ends " + fmtD(e.ov.to) : ", no end date");
+  if (e.src === "role") return "Role setting (" + roleLabel(e.role) + ")";
+  if (e.src === "calculated") return "Calculated — follows the columns it is built from";
+  if (e.src === "pair") return "Follows Hike Amount";
+  return e.src;
+}
+function lastRoleChange(kind, role, key) {
+  for (var i = 0; i < S.log.length; i++) { var l = S.log[i]; if (l.kind === kind && l.role === role && l.target === key) return l; }
+  return null;
+}
+function valText(kind, v) { return kind === "screen" ? LEVEL_LABEL[v] : kind === "action" ? (v ? "Yes" : "No") : LIMIT_LABEL[v]; }
+function eff(p, kind, key) { return kind === "screen" ? effScreen(p, key) : kind === "action" ? effAction(p, key) : effField(p, key); }
+function runQC() {
+  var q = S.qc.q, el = document.getElementById("qans"), h = "", t = (S.qc.t || "").split(":"), kind = t[0], key = t[1];
+  var item = kind === "screen" ? byKey(SCREENS, key) : kind === "action" ? byKey(ACTIONS, key) : byKey(FIELDS, key);
+  var p = personByEmp(S.qc.p);
+  if (q === "who") {
+    var want = kind === "action" ? S.qc.l === "true" : S.qc.l;
+    var hits = S.people.filter(function (x) { return canLogIn(x) && effRole(x).role && eff(x, kind, key).v === want; });
+    var byRole = {}, ovHits = [];
+    hits.forEach(function (x) { var e = eff(x, kind, key); if (e.src === "override") ovHits.push(x.name); else { var r = effRole(x).role; byRole[r] = (byRole[r] || 0) + 1; } });
+    h = "<b>" + hits.length + " " + (hits.length === 1 ? "person" : "people") + "</b> have " + esc(valText(kind, want)) + " on " + esc(item.label) + ".";
+    h += "<ul>" + Object.keys(byRole).map(function (r) { return "<li>" + esc(roleLabel(r)) + ": " + byRole[r] + " (role setting)</li>"; }).join("") + (ovHits.length ? "<li>By override: " + esc(ovHits.join(", ")) + "</li>" : "") + "</ul>";
+    if (hits.length) h += '<div class="src" style="margin-top:4px">' + esc(hits.slice(0, 8).map(function (x) { return x.name; }).join(", ")) + (hits.length > 8 ? " … +" + (hits.length - 8) + " more" : "") + "</div>";
+  } else if (!p) { h = "Pick a person."; }
+  else if (q === "does" || q === "can" || q === "why") {
+    var e = eff(p, kind, key), yes = kind === "screen" ? e.v !== "none" : kind === "action" ? !!e.v : e.v !== "hidden";
+    if (q === "why") h = "<b>" + esc(p.name) + "</b> has <b>" + esc(valText(kind, e.v)) + "</b> on " + esc(item.label) + ".";
+    else h = "<b class=\"" + (yes ? "y" : "n") + "\">" + (yes ? "Yes." : "No.") + "</b> " + esc(p.name) + (kind === "screen" ? " has " + esc(valText(kind, e.v)) + " on " : (yes ? " can use " : " can’t use ")) + esc(item.label) + ".";
+    var why = "";
+    if (!canLogIn(p)) why = "Can’t log in: " + flagsOf(p).map(function (f) { return f[0]; }).join(", ") + ".";
+    else if (!effRole(p).role) why = "No role — not in Delegation and no Catalyst role.";
+    else if (e.src === "locked") why = (kind === "screen" ? item.label + " is HR Admin only and can’t be changed." : "Fixed rule: " + item.fixed + ".");
+    else if (e.src === "override") why = srcText(e) + ". Without it, " + roleLabel(effRole(p).role) + " gives " + valText(kind, kind === "field" ? limitsFor(effRole(p).role, [])[key] : cur(kind, effRole(p).role, key)) + ".";
+    else if (e.src === "role") {
+      var lc = lastRoleChange(kind, e.role, key);
+      why = "Role setting: " + roleLabel(e.role) + " gets " + valText(kind, e.v) + (lc ? " — set by " + lc.by + " on " + fmtD(lc.at.slice(0, 10)) + ": “" + lc.reason + "”" : " (starting value)") + ".";
+    } else why = srcText(e) + ".";
+    h += '<div class="src" style="margin-top:4px">' + esc(why) + "</div>";
+    h += '<div class="src">' + esc(p.name) + " is " + esc(effRole(p).role ? roleLabel(effRole(p).role) : "—") + " · " + esc(effRole(p).from) + "</div>";
+  } else if (q === "what") {
+    var scr = SCREENS.filter(function (s) { return effScreen(p, s.key).v !== "none"; });
+    var act = ACTIONS.filter(function (a) { return effAction(p, a.key).v; });
+    var ok = canLogIn(p) && !!effRole(p).role, lim = limitsFor(effRole(p).role, ovFor(p.empId)), ed = ok ? FIELDS.filter(function (f) { return lim[f.key] === "edit"; }) : [], hid = ok ? FIELDS.filter(function (f) { return lim[f.key] === "hidden"; }) : [];
+    h = "<b>" + esc(p.name) + "</b> · " + esc(effRole(p).role ? roleLabel(effRole(p).role) : "no role") + (canLogIn(p) ? "" : " · can’t log in (" + flagsOf(p).map(function (f) { return f[0]; }).join(", ") + ")") +
+      "<ul><li>Screens: " + (scr.length ? esc(scr.map(function (s) { return s.label + " (" + LEVEL_LABEL[effScreen(p, s.key).v] + ")"; }).join(", ")) : "none") + "</li>" +
+      "<li>Actions: " + (act.length ? esc(act.map(function (a) { return a.label; }).join(", ")) : "none") + "</li>" +
+      "<li>Can edit: " + (ed.length ? esc(ed.map(function (f) { return f.label; }).join(", ")) : "nothing") + "</li>" +
+      "<li>Can’t see: " + (hid.length ? esc(hid.map(function (f) { return f.label; }).join(", ")) : "nothing hidden") + "</li></ul>";
+  }
+  el.innerHTML = h; el.className = "qans on";
+}
+
+/* ---------- modal: + Override, + Add role, Preview ---------- */
+function openModal(title, html) { document.getElementById("mTitle").textContent = title; document.getElementById("mBody").innerHTML = html; document.getElementById("modal").className = "modal open"; }
+function closeModal() { document.getElementById("modal").className = "modal"; }
+function ovForm(empId, teamOnly) {
+  var h = '<div class="mform"><div><label>Person</label><select id="ovP">' + S.people.filter(canLogIn).map(function (p) { return opt(p.empId, p.name + " (" + (effRole(p).role ? roleLabel(effRole(p).role) : "no role") + ")", empId); }).join("") + "</select></div>" +
+    '<div><label>Type</label><select id="ovT">' + (teamOnly ? opt("team", "Extra team", "team") : [["screen", "Screen"], ["action", "Action"], ["field", "Field"], ["role", "Whole role"], ["team", "Extra team"]].map(function (x) { return opt(x[0], x[1], "screen"); }).join("")) + "</select></div>" +
+    '<div class="full" id="ovWhat"></div>' +
+    '<div><label>End date (leave empty = no end date)</label><input type="date" id="ovTo"></div><div><label>Reason (also asked at Apply)</label><input id="ovR" maxlength="300"></div></div>' +
+    '<div class="mfoot"><button class="btn" id="mCancel">Cancel</button><button class="btn p" id="ovSave">Add to pending</button></div>';
+  openModal(teamOnly ? "+ Extra team" : "+ Override", h);
+  ovWhat();
+}
+function ovWhat() {
+  var t = document.getElementById("ovT").value, h = "";
+  if (t === "screen") h = '<div class="mform" style="padding:0"><div><label>Screen</label><select id="ovK">' + SCREENS.filter(function (s) { return !s.hrOnly; }).map(function (s) { return opt(s.key, s.label); }).join("") + '</select></div><div><label>Access</label><select id="ovV">' + opt("none", "None") + opt("view", "View (read-only)") + opt("edit", "Edit") + "</select></div></div>";
+  if (t === "action") h = '<div class="mform" style="padding:0"><div><label>Action</label><select id="ovK">' + ACTIONS.filter(function (a) { return !a.fixed; }).map(function (a) { return opt(a.key, a.label); }).join("") + '</select></div><div><label>Allowed</label><select id="ovV">' + opt("true", "Yes") + opt("false", "No") + "</select></div></div>";
+  if (t === "field") h = '<div class="mform" style="padding:0"><div><label>Field</label><select id="ovK">' + FIELDS.filter(function (f) { return f.kind !== "calc" && f.kind !== "pair"; }).map(function (f) { return opt(f.key, f.label); }).join("") + '</select></div><div><label>Limit</label><select id="ovV">' + opt("edit", "Edit") + opt("read", "Read") + opt("hidden", "Hidden") + "</select></div></div>";
+  if (t === "role") h = '<label>Treat as role</label><select id="ovV">' + roles().map(function (r) { return opt(r.key, r.label); }).join("") + "</select>";
+  if (t === "team") h = '<label>Add the team of</label><select id="ovK">' + S.people.filter(function (p) { var r = baseRole(p).role; return r === "techEd" || r === "compMgr"; }).map(function (p) { return opt(p.empId, p.name + " (" + roleLabel(baseRole(p).role) + ")"); }).join("") + "</select>";
+  document.getElementById("ovWhat").innerHTML = h;
+}
+function saveOv() {
+  var t = document.getElementById("ovT").value, k = document.getElementById("ovK"), v = document.getElementById("ovV");
+  var o = { id: "n" + (++tmp), empId: document.getElementById("ovP").value, type: t, key: k ? k.value : "", to: document.getElementById("ovTo").value, reason: document.getElementById("ovR").value.trim(), by: "", at: CONFIG.today };
+  o.value = t === "action" ? v.value === "true" : t === "team" ? "add" : v.value;
+  if (o.to && o.to < CONFIG.today) { alertBox("The end date is in the past."); return; }
+  if (t === "field" && byKey(FIELDS, o.key).kind !== "input" && o.value === "edit") { alertBox(byKey(FIELDS, o.key).label + " can’t be set to Edit."); return; }
+  if (t === "team" && o.key === o.empId) { alertBox("That is the person’s own team."); return; }
+  S.pending["ovAdd|" + o.id] = { kind: "ovAdd", ov: o };
+  closeModal(); S.sel = o.empId; renderAll();
+}
+function alertBox(t) { var f = document.querySelector("#mBody .mfoot"); var m = document.getElementById("mErr"); if (!m) { m = document.createElement("div"); m.id = "mErr"; m.className = "msg err"; m.style.margin = "0 14px 10px"; f.parentNode.insertBefore(m, f); } m.textContent = t; }
+function roleForm() {
+  openModal("+ Add role", '<div class="mform"><div><label>Display name</label><input id="nrL" placeholder="e.g. Comp Viewer"></div><div><label>Catalyst role (Authentication → Roles)</label><input id="nrC" placeholder="exact Catalyst role name"></div>' +
+    '<div class="full"><label><input type="checkbox" id="nrAll" style="width:auto"> Sees all employees (otherwise no team unless given extra scope)</label></div>' +
+    '<div class="full derived">The new role starts with <b>None</b> on every screen and <b>No</b> on every action. HR Operations screens stay HR only.</div></div>' +
+    '<div class="mfoot"><button class="btn" id="mCancel">Cancel</button><button class="btn p" id="nrSave">Add to pending</button></div>');
+}
+function saveRole() {
+  var l = document.getElementById("nrL").value.trim(), c = document.getElementById("nrC").value.trim();
+  if (!l) return alertBox("Enter the display name.");
+  if (!c) return alertBox("Enter the Catalyst role name.");
+  if (roles().some(function (r) { return r.label.toLowerCase() === l.toLowerCase() || (r.catalystRole && r.catalystRole.toLowerCase() === c.toLowerCase()); })) return alertBox("A role with this name or Catalyst role already exists.");
+  var key = "r" + l.replace(/[^A-Za-z0-9]/g, "").slice(0, 20) + (++tmp);
+  var r = { key: key, label: l, source: "catalyst", catalystRole: c, seesAll: document.getElementById("nrAll").checked, fixed: false };
+  initRole(key, null);
+  S.pending["roleAdd|" + key] = { kind: "roleAdd", role: r };
+  closeModal(); renderAll();
+}
+function previewHtml(title, scr, act, ed, hid, team) {
+  function ul(a) { return a.length ? "<ul>" + a.join("") + "</ul>" : '<div class="derived">None</div>'; }
+  return '<div class="mgrid"><div><h4>Screens (' + scr.length + ")</h4>" + ul(scr) + "</div><div><h4>Actions allowed (" + act.length + ")</h4>" + ul(act) + "</div><div><h4>Can edit (" + ed.length + ")</h4>" + ul(ed) +
+    '<h4 style="margin-top:10px">Can’t see (' + hid.length + ")</h4>" + ul(hid) + "</div></div>" + '<div class="mnote">' + esc(team) + " · Preview shows saved settings plus pending changes. Nothing is saved from here.</div>";
+}
+function previewRole(rk) {
+  var lim = limitsFor(rk, []), r = roleOf(rk);
+  var scr = SCREENS.filter(function (s) { return cur("screen", rk, s.key) !== "none"; }).map(function (s) { var v = cur("screen", rk, s.key); return "<li>" + esc(s.label) + '<span class="pill ' + (v === "edit" ? "e" : "v") + '">' + LEVEL_LABEL[v] + "</span></li>"; });
+  var act = ACTIONS.filter(function (a) { return cur("action", rk, a.key); }).map(function (a) { return "<li>" + esc(a.label) + "</li>"; });
+  openModal("Preview as " + r.label, previewHtml("", scr, act, FIELDS.filter(function (f) { return lim[f.key] === "edit"; }).map(function (f) { return "<li>" + esc(f.label) + "</li>"; }), FIELDS.filter(function (f) { return lim[f.key] === "hidden"; }).map(function (f) { return "<li>" + esc(f.label) + "</li>"; }), r.seesAll ? "Sees all employees" : rk === "techEd" || rk === "compMgr" ? "Sees own team from Delegation" : "No team unless extra scope"));
+}
+function previewPerson(empId) {
+  var p = personByEmp(empId), r = effRole(p).role, lim = limitsFor(r, ovFor(empId));
+  var scr = SCREENS.filter(function (s) { return effScreen(p, s.key).v !== "none"; }).map(function (s) { var e = effScreen(p, s.key); return "<li>" + esc(s.label) + '<span class="pill ' + (e.v === "edit" ? "e" : "v") + '">' + LEVEL_LABEL[e.v] + "</span>" + (e.src === "override" ? '<span class="ovsrc">override</span>' : "") + "</li>"; });
+  var act = ACTIONS.filter(function (a) { return effAction(p, a.key).v; }).map(function (a) { return "<li>" + esc(a.label) + (effAction(p, a.key).src === "override" ? '<span class="ovsrc">override</span>' : "") + "</li>"; });
+  openModal("Preview as " + p.name + (r ? " (" + roleLabel(r) + ")" : ""), previewHtml("", scr, act, FIELDS.filter(function (f) { return lim[f.key] === "edit"; }).map(function (f) { return "<li>" + esc(f.label) + "</li>"; }), FIELDS.filter(function (f) { return lim[f.key] === "hidden"; }).map(function (f) { return "<li>" + esc(f.label) + "</li>"; }), canLogIn(p) ? teamOf(p).txt : "Can’t log in"));
+}
+
+/* ---------- render ---------- */
+function renderPend() {
+  var n = Object.keys(S.pending).length, el = document.getElementById("pendCnt");
+  el.textContent = n ? n + " pending change" + (n > 1 ? "s" : "") : "No pending changes";
+  el.className = "cnt" + (n ? "" : " z");
+  document.getElementById("apply").disabled = !n;
+  var l = S.log[0]; document.getElementById("lastChange").textContent = l ? "Last change " + fmtD(String(l.at).slice(0, 10)) + " by " + l.by : "";
+  document.getElementById("previewRole").innerHTML = '<option value="">Preview as…</option>' + roles().map(function (r) { return opt(r.key, r.label); }).join("");
+}
+function renderAll() {
+  renderTabs();
+  var b = document.getElementById("body"), st = b.scrollTop;
+  b.innerHTML = S.tab === "screens" ? renderScreens() : S.tab === "actions" ? renderActions() : S.tab === "fields" ? renderFields() : S.tab === "people" ? renderPeople() : S.tab === "overrides" ? renderOvTable(false) : S.tab === "scope" ? renderOvTable(true) : renderAudit();
+  b.scrollTop = st;
+  ["fieldKind", "fieldShowRole", "fieldShowLim"].forEach(function (id) { var e = document.getElementById(id); if (e) e.value = S[id]; });
+  renderCard(); renderSideLists(); renderQC(); renderPend();
+}
+
+/* ---------- apply (demo) ---------- */
+function stamp() { var d = new Date(); return CONFIG.today + " " + d.toTimeString().slice(0, 8); }
+function applyDemo(reason) {
+  var at = stamp(), by = "priya.nair@company.com", lines = [];
+  Object.keys(S.pending).forEach(function (k) {
+    var p = S.pending[k];
+    if (p.kind === "screen" || p.kind === "action" || p.kind === "field") {
+      var g = p.kind === "screen" ? "screens" : p.kind === "action" ? "actions" : "fields";
+      lines.push({ kind: p.kind, target: p.key, role: p.role, from: String(S.matrix[g][p.role][p.key]), to: String(p.to) });
+      S.matrix[g][p.role][p.key] = p.to;
+    } else if (p.kind === "roleAdd") { S.roles.push(p.role); lines.push({ kind: "role", target: p.role.label, role: "", from: "", to: "Added (Catalyst role: " + p.role.catalystRole + ")" }); }
+    else if (p.kind === "roleRetire") { var r = roleOf(p.key); r.retired = true; lines.push({ kind: "role", target: r.label, role: "", from: "Active", to: "Retired" }); }
+    else if (p.kind === "ovAdd") { var o = p.ov; o.by = by; o.reason = o.reason || reason; S.overrides.push(o); var q = personByEmp(o.empId); lines.push({ kind: "override", target: q ? q.name : o.empId, role: "", from: "", to: ovText(o) + (o.to ? " (till " + fmtD(o.to) + ")" : " (no end date)") }); }
+    else if (p.kind === "ovRemove") { var x = null; S.overrides.forEach(function (y) { if (y.id === p.id) x = y; }); S.overrides = S.overrides.filter(function (y) { return y.id !== p.id; }); if (x) { var qq = personByEmp(x.empId); lines.push({ kind: "override", target: qq ? qq.name : x.empId, role: "", from: ovText(x), to: "(removed)" }); } }
+  });
+  lines.reverse().forEach(function (l) { l.at = at; l.by = by; l.reason = reason; S.log.unshift(l); });
+}
+
+/* changes in the shape accessapi /apply expects (new roles first, so settings for them can follow) */
+function changeList() {
+  var order = { roleAdd: 0, roleRetire: 1, screen: 2, action: 2, field: 2, ovAdd: 3, ovRemove: 3 };
+  return Object.keys(S.pending).map(function (k) { return S.pending[k]; }).sort(function (a, b) { return order[a.kind] - order[b.kind]; }).map(function (p) {
+    if (p.kind === "screen" || p.kind === "action" || p.kind === "field") return { kind: p.kind, role: p.role, key: p.key, to: p.to };
+    if (p.kind === "roleAdd") return { kind: "roleAdd", role: { key: p.role.key, label: p.role.label, catalystRole: p.role.catalystRole, seesAll: p.role.seesAll } };
+    if (p.kind === "roleRetire") return { kind: "roleRetire", key: p.key };
+    if (p.kind === "ovAdd") return { kind: "ovAdd", ov: { empId: p.ov.empId, type: p.ov.type, key: p.ov.key, value: p.ov.value, to: p.ov.to, reason: p.ov.reason } };
+    return { kind: "ovRemove", id: p.id };
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".sbox")) document.getElementById("sres").style.display = "none";
+  var t = e.target.closest("[data-tab],[data-set],[data-act],[data-person],[data-ovrm],[data-ovundo],[data-newov],[data-pvperson],[data-retire],#addRole,#qcGo,#mCancel,#ovSave,#nrSave,#exportPeople");
+  if (!t) return;
+  if (t.dataset.tab) { S.tab = t.dataset.tab; clearMsg(); renderAll(); return; }
+  if (t.dataset.set) { var a = t.dataset.set.split("|"); setVal(a[0], a[1], a[2], a[3]); return; }
+  if (t.dataset.act) { var b = t.dataset.act.split("|"); setVal("action", b[0], b[1], b[2] === "1"); return; }
+  if (t.dataset.person) { S.sel = t.dataset.person; S.qc.p = S.sel; document.getElementById("qans").className = "qans"; document.getElementById("psearch").value = ""; renderAll(); return; }
+  if (t.dataset.ovrm) { var o = null; S.overrides.forEach(function (x) { if (x.id === t.dataset.ovrm) o = x; }); var k = "ovRemove|" + t.dataset.ovrm;
+    if (!o) { delete S.pending["ovAdd|" + t.dataset.ovrm]; } else if (S.pending[k]) delete S.pending[k]; else S.pending[k] = { kind: "ovRemove", id: o.id, type: o.type }; renderAll(); return; }
+  if (t.dataset.ovundo) { delete S.pending["ovAdd|" + t.dataset.ovundo]; renderAll(); return; }
+  if (t.dataset.newov !== undefined) { ovForm(t.dataset.for || S.sel, t.dataset.newov === "team"); return; }
+  if (t.dataset.pvperson) { previewPerson(t.dataset.pvperson); return; }
+  if (t.dataset.retire) { var rk = t.dataset.retire; if (S.pending["roleAdd|" + rk]) delete S.pending["roleAdd|" + rk]; else if (S.pending["roleRetire|" + rk]) delete S.pending["roleRetire|" + rk]; else S.pending["roleRetire|" + rk] = { kind: "roleRetire", key: rk }; renderAll(); return; }
+  if (t.id === "addRole") { roleForm(); return; }
+  if (t.id === "qcGo") { runQC(); return; }
+  if (t.id === "mCancel") { closeModal(); return; }
+  if (t.id === "ovSave") { saveOv(); return; }
+  if (t.id === "nrSave") { saveRole(); return; }
+  if (t.id === "exportPeople") {
+    var rows = [["Employee ID", "Name", "Email", "Role", "Role from", "Team", "Overrides", "Flags"]];
+    S.people.forEach(function (p) { var er = effRole(p); rows.push([p.empId, p.name, p.email, er.role ? roleLabel(er.role) : "", er.from, teamOf(p).txt, ovFor(p.empId).map(ovText).join("; "), flagsOf(p).map(function (f) { return f[0]; }).join("; ")]); });
+    var csv = rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+    var a2 = document.createElement("a"); a2.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a2.download = "access_people_" + CONFIG.today + ".csv"; document.body.appendChild(a2); a2.click(); a2.remove();
+  }
+});
+document.addEventListener("change", function (e) {
+  var t = e.target;
+  if (t.dataset.fld) { var a = t.dataset.fld.split("|"); setVal("field", a[0], a[1], t.value); return; }
+  if (t.dataset.qc) { S.qc[t.dataset.qc] = t.value; if (t.dataset.qc === "q") S.qc.t = ""; document.getElementById("qans").className = "qans"; renderQC(); return; }
+  if (["fieldKind", "fieldShowRole", "fieldShowLim", "peopleRole"].indexOf(t.id) > -1) { S[t.id] = t.value; renderAll(); return; }
+  if (t.id === "logFrom" || t.id === "logTo") { S[t.id] = t.value; renderAll(); return; }
+  if (t.id === "previewRole" && t.value) { previewRole(t.value); t.value = ""; return; }
+  if (t.id === "ovT") ovWhat();
+});
+document.addEventListener("input", function (e) {
+  var t = e.target;
+  if (t.id === "psearch") renderSearch();
+  if (t.id === "fieldSearch" || t.id === "peopleSearch") { S[t.id] = t.value; renderAll(); var f = document.getElementById(t.id); f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+});
+document.getElementById("discard").addEventListener("click", function () { S.pending = {}; document.getElementById("reason").value = ""; clearMsg(); renderAll(); });
+document.getElementById("apply").addEventListener("click", function () {
+  var reason = document.getElementById("reason").value.trim();
+  if (!reason) { showMsg("Please give a reason for the change."); document.getElementById("reason").focus(); return; }
+  var n = Object.keys(S.pending).length;
+  if (!CONFIG.accessApiUrl) {
+    applyDemo(reason); S.pending = {}; document.getElementById("reason").value = "";
+    var nv = demoServerVersion(DATA.version + 1); writeCache(nv); DATA = { version: nv, from: "saved" }; showVer();
+    showMsg(n + " change(s) applied and logged (demo data). Access version is now v" + nv + ".", true); renderAll(); return;
+  }
+  document.getElementById("apply").disabled = true;
+  api("/apply", { reason: reason, changes: changeList() }).then(function (d) {
+    if (!d.ok) { showMsg(d.error || "Could not save."); renderPend(); return; }
+    S.pending = {}; document.getElementById("reason").value = "";
+    showMsg(d.applied + " change(s) applied and logged. Access version is now v" + d.version + ".", true);
+    loadData(true);
+  }, function () { showMsg("Could not reach accessapi."); renderPend(); });
+});
+document.getElementById("mClose").addEventListener("click", closeModal);
+document.getElementById("modal").addEventListener("click", function (e) { if (e.target.id === "modal") closeModal(); });
+
+/* ---------- load only when changed ----------
+   The page keeps a copy of the access data for this browser session (cleared when the browser closes).
+   On open it asks the server for the access version; it downloads the data again only if the version changed.
+   The server raises the version on Apply, Delegation / Employee Master changes and Catalyst role changes. */
+var CACHE_KEY = "accessData.v5", DATA = { version: 0, from: "" };
+function snapshot() { return { catalog: { screens: SCREENS, actions: ACTIONS, fields: FIELDS }, roles: S.roles, matrix: S.matrix, people: S.people, deleg: S.deleg, overrides: S.overrides, log: S.log }; }
+function restore(d) { if (d.catalog) { SCREENS = d.catalog.screens; ACTIONS = d.catalog.actions; FIELDS = d.catalog.fields; } S.roles = d.roles; S.matrix = d.matrix; S.people = d.people; S.deleg = d.deleg; S.overrides = d.overrides; S.log = d.log; }
+function readCache() { try { var c = sessionStorage.getItem(CACHE_KEY); return c ? JSON.parse(c) : null; } catch (e) { return null; } }
+function writeCache(version) { try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ version: version, data: snapshot() })); } catch (e) { /* storage blocked: keep working without a copy */ } }
+function showVer() { document.getElementById("dataVer").textContent = "Data v" + DATA.version + " · " + DATA.from + " · "; }
+/* demo stand-in for the server's version number (kept in this browser session) */
+function demoServerVersion(set) {
+  try { if (set) sessionStorage.setItem("accessDemo.serverVersion", String(set)); return +(sessionStorage.getItem("accessDemo.serverVersion") || 41); } catch (e) { return set || 41; }
+}
+function api(path, body) {
+  var opt = body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin" };
+  return fetch(CONFIG.accessApiUrl.replace(/\/$/, "") + path, opt).then(function (r) { return r.json(); });
+}
+function loadData(force) {
+  var cache = readCache();
+  if (!CONFIG.accessApiUrl) {
+    var v = demoServerVersion();
+    if (!force && cache && cache.version === v) { restore(cache.data); DATA = { version: v, from: "from copy, nothing downloaded" }; }
+    else { demo(); writeCache(v); DATA = { version: v, from: "downloaded" }; }
+    showVer(); renderAll(); return;
+  }
+  api("/version").then(function (r) {
+    if (!r.ok) { showMsg(r.error || "Could not check the access version."); return; }
+    if (!force && cache && cache.version === r.version) { restore(cache.data); DATA = { version: r.version, from: "from copy, nothing downloaded" }; showVer(); renderAll(); return; }
+    return api("/admin/state").then(function (d) {
+      if (!d.ok) { showMsg(d.error || "Could not load access settings."); return; }
+      restore(d); writeCache(d.version); DATA = { version: d.version, from: "downloaded" }; showVer(); renderAll();
+    });
+  }, function () { showMsg("Could not reach accessapi."); });
+}
+
+/* ---------- start ---------- */
+document.getElementById("cycName").textContent = CONFIG.cycleName;
+S.sel = "E1210";
+loadData(false);
+window.AccessScreen = { reload: function () { loadData(true); }, setCycle: function (c) { CONFIG.cycleName = (c && c.name) || CONFIG.cycleName; document.getElementById("cycName").textContent = CONFIG.cycleName; renderAll(); } };
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "71873000000018034",
+      "name": "PerformanceLetterAutomation",
+      "domain": {
+        "id": "50046285747",
+        "name": "performanceletterautomation-60088966704.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60088966704",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
+}

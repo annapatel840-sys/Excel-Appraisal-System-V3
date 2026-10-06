@@ -1,0 +1,9 @@
+{
+	"name": "payrollcycleapi",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "user1@demo7.race2tech.in",
+	"dependencies": {
+		"zcatalyst-sdk-node": "^3.4.0"
+	}
+}
