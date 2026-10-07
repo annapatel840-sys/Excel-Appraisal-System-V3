@@ -30,7 +30,11 @@ const CURRENT_CYCLE = "Apr-26";
    ------------------------------------------------------------------ */
 // Where "View budget" goes when no onViewBudget prop is passed.
 // Prefer passing onViewBudget={() => navigate("/your-route")}.
-const BUDGET_PATH = "/employee-master?tab=budget-allocation";
+
+// const BUDGET_PATH = "https://excel-appraisal-syst-iqjipxdl.onslate.in/employee-master?tab=budget-allocation";
+
+// const BUDGET_PATH = "/employee-master?tab=budget-allocation";
+
 // Placeholder text for the "Budget changed" banner until real budget
 // figures are wired in. Pass budgetNotice={{ from, to, changes, since }}
 // to override, or budgetNotice={null} to hide the banner message.
@@ -54,6 +58,8 @@ const EDIT_FIELDS = [
 /* CHANGED: .ds-root now keeps itself inside the visible window and scrolls
    internally on short screens, so Previous / Save & next can never be
    clipped. If your app header is taller/shorter than 72px, change
+<<<<<<< HEAD
+   --ds-offset below. 
    --ds-offset below.
    CHANGED (layout round): .ds-main gap is 0 (no space between left panel,
    Metrics and Feedback) and, on wide screens, .ds-main gets a fixed height
@@ -526,8 +532,10 @@ export function DetailScreenPage({
     if (typeof onViewBudget === "function") onViewBudget();
     else window.location.assign(BUDGET_PATH);
   };
+
   // CHANGED: Feedback column widths reduced by 25%
   // (1.12 -> 0.84 expanded, 0.735 -> 0.55 normal).
+
   const cols = [
     "minmax(0,1.7fr)",
     metricsOpen ? "minmax(0,1fr)" : "34px",
@@ -618,6 +626,9 @@ export function DetailScreenPage({
                   {rows.length}
                 </span>
               </div>
+
+              <div className="min-h-0 flex-1 overflow-hidden">
+
               {/* CHANGED: this wrapper now scrolls inside the left panel so the
                   legend and Previous / Save & next bar stay pinned below it. */}
               <div className="ds-scroll min-h-0 flex-1 overflow-auto">
@@ -851,6 +862,7 @@ export function DetailScreenPage({
                   </CompFullRow>
                 </div>
               </div>
+              </div>
               <div
                 className="flex shrink-0 flex-wrap gap-3.5 border-t px-3.5 py-1.5 text-[11px]"
                 style={{ color: MUTED, borderColor: LINE }}
@@ -896,6 +908,7 @@ export function DetailScreenPage({
                 </div>
               </div>
             </section>
+
             {/* MIDDLE — Metrics (frontend placeholder for now) */}
             {metricsOpen ? (
               <section
@@ -1863,5 +1876,9 @@ function HistRow({ year, vals, prev, current }) {
       ))}
     </tr>
   );
+
 }
+
+
  
+

@@ -560,7 +560,7 @@ export function AppraisalGrid({
   rows,
   filters,
   setFilter,
-   verticalLayout = false,
+  verticalLayout = false,
   optionsFor,
   selected,
   toggleSelected,
@@ -568,6 +568,8 @@ export function AppraisalGrid({
 
   showHistory,
   setShowHistory,
+  
+
 }) {
   const { updateCell, updateLinkedCells, bulkUpdate, modified } =
     useAppraisal();
