@@ -1,0 +1,10 @@
+{
+  "command": "node server/index.cjs",
+  "build_path": ".",
+  "stack": "node22",
+  "env_variables": {},
+  "memory": 512,
+  "scripts": {
+    "preserve": "npm install --omit=dev && npm run build"
+  }
+}

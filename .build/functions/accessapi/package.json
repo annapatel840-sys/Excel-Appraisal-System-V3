@@ -1,0 +1,12 @@
+{
+	"name": "accessapi",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"test": "node test/access.test.js"
+	},
+	"dependencies": {
+		"express": "^5.2.1",
+		"zcatalyst-sdk-node": "^3.4.0"
+	}
+}
