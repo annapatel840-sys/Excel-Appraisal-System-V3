@@ -1,0 +1,13 @@
+{
+	"deployment": {
+		"name": "appraisalauditapi",
+		"stack": "node24",
+		"type": "advancedio",
+		"env_variables": {
+			"ACCESS_ENFORCE": "true"
+		}
+	},
+	"execution": {
+		"main": "index.js"
+	}
+}

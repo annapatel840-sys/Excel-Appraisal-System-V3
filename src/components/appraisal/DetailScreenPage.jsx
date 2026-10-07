@@ -30,7 +30,11 @@ const CURRENT_CYCLE = "Apr-26";
    ------------------------------------------------------------------ */
 // Where "View budget" goes when no onViewBudget prop is passed.
 // Prefer passing onViewBudget={() => navigate("/your-route")}.
+<<<<<<< HEAD
 const BUDGET_PATH = "https://excel-appraisal-syst-iqjipxdl.onslate.in/employee-master?tab=budget-allocation";
+=======
+const BUDGET_PATH = "/employee-master?tab=budget-allocation";
+>>>>>>> fa55ad528e6d7fc88edd417495235e271acaa991
 // Placeholder text for the "Budget changed" banner until real budget
 // figures are wired in. Pass budgetNotice={{ from, to, changes, since }}
 // to override, or budgetNotice={null} to hide the banner message.
@@ -54,7 +58,15 @@ const EDIT_FIELDS = [
 /* CHANGED: .ds-root now keeps itself inside the visible window and scrolls
    internally on short screens, so Previous / Save & next can never be
    clipped. If your app header is taller/shorter than 72px, change
+<<<<<<< HEAD
    --ds-offset below. */
+=======
+   --ds-offset below.
+   CHANGED (layout round): .ds-main gap is 0 (no space between left panel,
+   Metrics and Feedback) and, on wide screens, .ds-main gets a fixed height
+   so the three panels fit the visible screen and the footer stays in view.
+   The 52px accounts for the banner (~38px) plus the top padding. */
+>>>>>>> fa55ad528e6d7fc88edd417495235e271acaa991
 const DS_CSS = `
 .ds-root{--ds-offset:72px;display:flex;flex-direction:column;min-height:100%;height:100%;max-height:calc(100vh - var(--ds-offset));max-height:calc(100dvh - var(--ds-offset));overflow-y:auto;scrollbar-width:thin;scrollbar-color:#C4CED6 transparent}
 .ds-main{display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:10px 12px 0;align-items:stretch}
@@ -522,6 +534,11 @@ export function DetailScreenPage({
     if (typeof onViewBudget === "function") onViewBudget();
     else window.location.assign(BUDGET_PATH);
   };
+<<<<<<< HEAD
+=======
+  // CHANGED: Feedback column widths reduced by 25%
+  // (1.12 -> 0.84 expanded, 0.735 -> 0.55 normal).
+>>>>>>> fa55ad528e6d7fc88edd417495235e271acaa991
   const cols = [
     "minmax(0,1.7fr)",
     metricsOpen ? "minmax(0,1fr)" : "34px",
@@ -612,7 +629,13 @@ export function DetailScreenPage({
                   {rows.length}
                 </span>
               </div>
+<<<<<<< HEAD
               <div className="min-h-0 flex-1 overflow-hidden">
+=======
+              {/* CHANGED: this wrapper now scrolls inside the left panel so the
+                  legend and Previous / Save & next bar stay pinned below it. */}
+              <div className="ds-scroll min-h-0 flex-1 overflow-auto">
+>>>>>>> fa55ad528e6d7fc88edd417495235e271acaa991
                 <div
                   className="grid text-[12.5px]"
                   style={{ gridTemplateColumns: COMP_COLS }}
@@ -1855,4 +1878,9 @@ function HistRow({ year, vals, prev, current }) {
       ))}
     </tr>
   );
+<<<<<<< HEAD
 }
+=======
+}
+ 
+>>>>>>> fa55ad528e6d7fc88edd417495235e271acaa991
