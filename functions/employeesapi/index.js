@@ -277,12 +277,8 @@ function normalizeStatus(value) {
    ============================================================ */
 
 function isHRUser(user) {
-  user = user || {};
-
-  const roleDetails = user.role_details || {};
-
   const role = String(
-    roleDetails.role_name || user.role_name || "",
+    user?.role_details?.role_name || user?.role_name || "",
   )
     .trim()
     .toLowerCase();
@@ -306,17 +302,15 @@ function normalizeText(value) {
 }
 
 function getCurrentUserMatchValues(user) {
-  user = user || {};
-
-  const firstName = user.first_name || "";
-  const lastName = user.last_name || "";
+  const firstName = user?.first_name || "";
+  const lastName = user?.last_name || "";
 
   return [
-    user.user_id,
-    user.email_id,
-    user.email,
-    user.display_name,
-    user.name,
+    user?.user_id,
+    user?.email_id,
+    user?.email,
+    user?.display_name,
+    user?.name,
     firstName,
     lastName,
     [firstName, lastName].filter(Boolean).join(" "),
@@ -324,10 +318,7 @@ function getCurrentUserMatchValues(user) {
 }
 
 function employeeBelongsToCurrentUser(employee, user) {
-  employee = employee || {};
-  user = user || {};
-
-  const assignedRaw = String(employee.appraiser_tech_ed || "").trim();
+  const assignedRaw = String(employee?.appraiser_tech_ed || "").trim();
   if (!assignedRaw) return false;
 
   const assigned = normalizeText(assignedRaw);
@@ -348,15 +339,15 @@ function employeeBelongsToCurrentUser(employee, user) {
   // and last_name separately, while the employee assignment can contain
   // "EMPxxxx - First Last". Match the user's name tokens without hardcoding
   // any employee ID or person.
-  const firstName = normalizeText(user.first_name);
-  const lastName = normalizeText(user.last_name);
+  const firstName = normalizeText(user?.first_name);
+  const lastName = normalizeText(user?.last_name);
 
   if (lastName && !assigned.includes(lastName)) {
     return false;
   }
 
   if (firstName) {
-    const firstNameParts = String(user.first_name || "")
+    const firstNameParts = String(user?.first_name || "")
       .trim()
       .split(/[^A-Za-z0-9]+/)
       .map(normalizeText)
@@ -602,20 +593,10 @@ function mergeEmployeeMasterIntoAppraisal(appraisalRows, employeeMasterMap) {
       current_annual_base_pay: Number(row.current_annual_base_pay || 0),
       target_pb_allocated_for_may: Number(row.target_pb_allocated_for_may || 0),
       allocated_pb_amount: Number(row.allocated_pb_amount || 0),
-      pb_installment: String(
-        row.pb_installment !== null &&
-        row.pb_installment !== undefined
-          ? row.pb_installment
-          : "",
-      ),
+      pb_installment: String(row.pb_installment ?? ""),
       pb_to_be_paid: Number(row.pb_to_be_paid || 0),
       new_pb_to_be_offered: Number(row.new_pb_to_be_offered || 0),
-      new_pb_installment: String(
-        row.new_pb_installment !== null &&
-        row.new_pb_installment !== undefined
-          ? row.new_pb_installment
-          : "",
-      ),
+      new_pb_installment: String(row.new_pb_installment ?? ""),
       new_rb: Number(row.new_rb || 0),
       hike_amount: Number(row.hike_amount || 0),
       hike_pct: Number(row.hike_pct || 0),
@@ -801,10 +782,7 @@ async function getEmployees(req, res) {
     try {
       currentUser = await appInstance.userManagement().getCurrentUser();
     } catch (error) {
-      console.warn(
-        "Unable to resolve current Catalyst user for role filtering:",
-        error && error.message,
-      );
+      console.warn("Unable to resolve current Catalyst user for role filtering:", error?.message);
     }
 
     if (!currentUser || !currentUser.user_id) {
